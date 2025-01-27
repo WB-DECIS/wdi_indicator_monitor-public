@@ -40,8 +40,10 @@ theme_set(theme_minimal(base_size = 24, base_family = "Andes Bold"))
 #| message: false
 
 monitoring_data <- read_csv("data/wdic.csv")
-score_table <- read_csv("data/indicators_scoretable.csv") 
-score_table <- mutate(score_table, across(contains("_score_hybrid"), ~ round(., 2)))
+score_table     <- read_csv("data/indicators_scoretable.csv") 
+score_table     <- mutate(score_table, 
+                          across(contains("_score_hybrid"), 
+                                 ~ round(., 2)))
 ```
 
 ```{r}
@@ -83,15 +85,19 @@ This dashboard displays <br/> statistics for:
 
 ```{r}
 #download the data
-score_table %>%
+score_table |> 
+  select(-contains("score")) |> 
+  select(-contains("mean")) |> 
+  select(-c("uniquevisitors", 
+            "pageviews", 
+            "visitors")) |> 
   download_this(
-    output_name = "WDI Monitoring data set",
+    output_name      = "WDI Monitoring data set",
     output_extension = ".xlsx",
-    button_label = "Download indicator score",
-    button_type = "warning",
-    has_icon = TRUE,
-    icon = "fa fa-save"
-  )
+    button_label     = "Download indicator score",
+    button_type      = "warning",
+    has_icon         = TRUE,
+    icon             = "fa fa-save")
 ```
 
 # All
