@@ -31,7 +31,6 @@ library(plotly)
 library(downloadthis)
 library(reactable)
 library(htmltools)
-library(shiny)
 
 theme_set(theme_minimal(base_size = 24, base_family = "Andes Bold"))
 ```
@@ -244,7 +243,11 @@ var_descr <-
 var_df <- 
   data.frame(var_selection = var_selection, 
              var_descr     = var_descr)
-
+box_vars_df <- var_df %>%
+  filter(var_selection %in% c("countryobs_avg", 
+                              "span_years", 
+                              "cov_years", 
+                              "p_lmic"))
 ```
 
 
@@ -378,6 +381,41 @@ p
 
 ```
 
+## Row
+
+```{r}
+# Create a new Plotly object for the boxplots
+p_box <- plot_ly()
+
+for (i in seq_len(nrow(box_vars_df))) {
+  var_nm    <- box_vars_df$var_selection[i]  # e.g. "yearfirst"
+  var_label <- box_vars_df$var_descr[i]      # e.g. "First Year"
+  
+  # 1) Extract the numeric data for this column
+  y_values <- score_table[[var_nm]]
+  
+  # 2) Add a box trace for these values, labeling the box with var_label
+  p_box <- p_box %>%
+    add_trace(
+      x    = rep(var_label, length(y_values)),  # single "category" for this variable
+      y    = y_values,
+      type = "box",
+      name = var_label
+    )
+}
+
+# Then finalize layout
+p_box <- p_box %>%
+  layout(
+    title = "Boxplots for Selected Columns",
+    xaxis = list(title = ""),
+    yaxis = list(title = "Value")
+  )
+
+p_box
+
+
+```
 
 
 <!-- # Metadata -->
