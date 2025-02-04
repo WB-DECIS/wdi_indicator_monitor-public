@@ -31,6 +31,7 @@ library(plotly)
 library(downloadthis)
 library(reactable)
 library(htmltools)
+library(shiny)
 
 theme_set(theme_minimal(base_size = 24, base_family = "Andes Bold"))
 ```
@@ -182,55 +183,202 @@ card_b_style <- "font-size: 2.5rem; font-color: #ffffff; margin: 0; text-align: 
 
 ```
 
-## Row 
-```{r}
-##| title: Figure
+```{r globals, include=FALSE}
+# Vector of eligible columns
 
-#beeswarm plot
-metric_nm <- 'hybrid_score_wgtd'
-metric_des <- "WDI Scoring Metric"
+# # Store all eligible columns (including 'yearfirst') in a vector
+var_selection <- 
+  c("yearfirst", 
+    "total_obs", 
+    "n_years", 
+    "countryobs_avg",
+    "countryobs_max",
+    
+    "yearlatest_mean", 
+    "yearlatest_median",
+    "yearlatest", 
+    
+    "yearfirst_mean",
+    "yearfirst_median",
+    
+    "yearmean_mean",
+    "yearmean_median",
+    
+    "n_lmic", 
+    "p_lmic",
+    
+    "span_years", 
+    "cov_years", 
+    
+    "nonmiss", 
+    "nonmiss_tot", 
+    "nonmiss_tot2000")
 
-breakup_tab_mod_df <- score_table %>% 
-  mutate(name_flag="WDI Indicators") %>%
-  rename('metric'= !!metric_nm) %>%
-  group_by(name_flag) %>%
-  summarise(metric_mn=mean(metric, na.rm=TRUE),
-            metric_min=min(metric, na.rm=TRUE),
-            metric_max=max(metric, na.rm=TRUE),
-            indicator_min=Indicator.Name[which.min(metric)],
-            indicator_max=Indicator.Name[which.max(metric)],
-            ) %>%
-  #arrange(-metric_mn) %>%
-  transmute(
-    name_flag=name_flag,
-    metric=round(metric_mn,2),
-    min=round(metric_min,2),
-    indicator_min=indicator_min,
-    max=round(metric_max,2),
-    indicator_max=indicator_max
-  ) 
+var_descr <- 
+  c("First year", 
+    "Total obs.", 
+    "Number of years", 
+    "Avg. country obs.", 
+    "Max. country obs.", 
+    
+    "Mean of latest year", 
+    "Med. of latest year", 
+    "Latest year", 
+    
+    "Mean of first year", 
+    "Med. of first year", 
+    
+    "Mean of mean year", 
+    "Med. of mean year", 
+    
+    "Number of LMICs", 
+    "% of LMICs", 
+    
+    "Year span", 
+    "Year coverage", 
+    
+    "Non-missing", 
+    "Non-missing, total", 
+    "Non-missing, total since 2000")
 
-p <- score_table %>% 
-  mutate(name_flag="WDI Indicators") %>%
-  rename('metric'= !!metric_nm) %>%
-  mutate(name_flag=factor(name_flag, levels=breakup_tab_mod_df$name_flag)) %>%
-  ggplot(aes(x=name_flag, y=metric, group=Indicator.Name)) +
-    geom_beeswarm(color='#457b9d', alpha=0.5) +
-    geom_segment(data=breakup_tab_mod_df, aes( xend=after_stat(x)+.3, yend=after_stat(y), group=""), color='black', size=1)  +
-    geom_segment(data=breakup_tab_mod_df, aes( xend=after_stat(x)-.3, yend=after_stat(y), group=""), color='black', size=1)  +
-    geom_text(data=breakup_tab_mod_df, aes(label=paste0("Mean: ",round(metric, 1)), group=""), vjust=-2.5, hjust=1.5, color='black', size=4) +
-    theme_bw() +
-    expand_limits(y=c(0,4)) +
-    xlab('Status') +
-    ylab(metric_des) +
-    coord_flip() +
-      labs(title='Indicator Scores for WDI Indicators',
-
-                   caption='Black lines represent the mean by status.')
-
-ggplotly(p)
+var_df <- 
+  data.frame(var_selection = var_selection, 
+             var_descr     = var_descr)
 
 ```
+
+
+## Row 
+
+
+
+```{r beeswarm-plot}
+score_table <- score_table %>%
+  mutate(name_flag = "WDI Indicators")
+
+p      <- plot_ly()
+n_vars <- nrow(var_df)
+
+make_visible_vec <- function(i, n_vars) {
+  out <- rep(FALSE, 3 * n_vars)
+  # The triple (3i-2, 3i-1, 3i) belongs to variable i
+  out[(3*i - 2):(3*i)] <- TRUE
+  out
+}
+
+for (i in seq_len(n_vars)) {
+  
+  var_nm    <- var_df$var_selection[i]
+  var_label <- var_df$var_descr[i]    
+  
+  # Rename the chosen column to 'metric'
+  df_i <- score_table %>%
+    rename(metric = all_of(var_nm)) %>%
+    mutate(
+      # Minimal random jitter
+      x_jitter = 1 + runif(n(), min=-0.1, max=0.1),
+      text_tooltip = paste0(
+        "Indicator: ", Indicator.Name, "<br>",
+        var_label, ": ", metric
+      )
+    )
+  
+  # Mean for the horizontal line
+  var_mean <- mean(df_i$metric, na.rm = TRUE)
+  mean_label <- paste0("Mean: ", round(var_mean, 2))
+  
+  # 1) Points trace
+  p <- p %>%
+    add_trace(
+      data       = df_i,
+      x          = ~x_jitter,
+      y          = ~metric,
+      type       = "scatter",
+      mode       = "markers",
+      marker     = list(color = "#457b9d", opacity = 0.5),
+      hoverinfo  = "text",
+      text       = ~text_tooltip,
+      name       = paste0(var_label, "_points"),
+      visible    = (i == 1)
+    )
+  
+  # 2) Horizontal mean line
+  p <- p %>%
+    add_trace(
+      x          = c(0.87, 1.13),
+      y          = rep(var_mean, 2),
+      type       = "scatter",
+      mode       = "lines",
+      line       = list(color = "black"),
+      hoverinfo  = "none",
+      name       = paste0(var_label, "_mean_line"),
+      visible    = (i == 1)
+    )
+  
+  # 3) Text label
+  p <- p %>%
+    add_trace(
+      x          = 1.13,
+      y          = var_mean,
+      type       = "scatter",
+      mode       = "text",
+      text       = mean_label,
+      textposition = "middle right",
+      hoverinfo  = "none",
+      textfont   = list(color = "black"),
+      showlegend = FALSE,
+      name       = paste0(var_label, "_mean_text"),
+      visible    = (i == 1)
+    )
+}
+
+# Build the updatemenus
+buttons <- lapply(seq_len(n_vars), function(i) {
+  var_label <- var_df$var_descr[i]
+  list(
+    label  = var_label,   # displayed in the dropdown
+    method = "update",
+    args   = list(
+      list(visible = make_visible_vec(i, n_vars)),
+      list(
+        title = paste0("Plot of ", var_label, " for all WDI Indicators"),
+        yaxis = list(title = var_label)
+      )
+    )
+  )
+})
+
+updatemenus <- list(
+  list(
+    type   = "dropdown",
+    active = 0,
+    buttons= buttons
+  )
+)
+
+# Final layout
+p <- p %>%
+  layout(
+    title      = paste0("Plot of ", 
+                        tolower(var_df$var_descr[1]), 
+                        " for all WDI Indicators"),
+    showlegend = FALSE,
+    xaxis = list(
+      zeroline       = FALSE,
+      showticklabels = FALSE, 
+      title          = ""
+    ),
+    yaxis = list(title = var_df$var_descr[1]),
+    updatemenus = updatemenus
+  )
+
+p
+
+
+
+```
+
+
 
 <!-- # Metadata -->
 
@@ -571,7 +719,14 @@ The number of countries for which data is available is a key metric to understan
 ```{r}
 #| title: Country Coverage Table
 
-ctr_table <- select(score_table, Indicator.Code, Indicator.Name, geographic_score_hybrid, n_country, n_lmic, p_lmic, datatopic) %>%
+ctr_table <- select(score_table, 
+                    Indicator.Code, 
+                    Indicator.Name, 
+                    geographic_score_hybrid, 
+                    n_country, 
+                    n_lmic,
+                    p_lmic, 
+                    datatopic) %>%
       arrange(desc(n_country))
 
 # Function for select input filter
