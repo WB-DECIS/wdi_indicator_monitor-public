@@ -144,42 +144,71 @@ time_count <- score_table %>%
 # 0-100 indicators is yellow
 # more than 100 indicators is red
 warning <- "#A79011"
-danger <-"#CA8181"
-light <- "#7B98AD"
+danger  <- "#CA8181"
+light   <- "#7B98AD"
 
-metadata_color <- case_when(
-  between(metadata_count, 0, 100) ~ warning,
-  metadata_count > 100 ~ danger,
+# Prep data for tiles
+plmics <- score_table |> 
+  group_by(Topic) |> 
+  summarise(m = median(p_lmic)) |> 
+  select(m) |> 
+  _[]$m |> 
+  mean(na.rm = T) |> 
+  round(1)
+lyr <- score_table |> 
+  group_by(Topic) |> 
+  summarise(m = median(yearlatest)) |> 
+  select(m) |> 
+  _[]$m |> 
+  mean(na.rm = T) |> 
+  round(1)
+syr <- score_table |> 
+  group_by(Topic) |> 
+  summarise(m = median(span_years)) |> 
+  select(m) |> 
+  _[]$m |> 
+  mean(na.rm = T) |> 
+  round(1)
+nctry <- score_table |> 
+  group_by(Topic) |> 
+  summarise(m = median(n_country)) |> 
+  select(m) |> 
+  _[]$m |> 
+  mean(na.rm = T) |> 
+  round(1)
+
+# prep tile colours
+plmics_color <- case_when(
+  between(plmics, 0, 100) ~ warning,
+  plmics > 100 ~ danger,
   .default = light
   )
 
-license_color <- case_when(
-  between(license_count, 0, 100) ~ warning,
-  license_count > 100 ~ danger,
+lyr_color <- case_when(
+  between(lyr, 0, 100) ~ warning,
+  lyr > 100 ~ danger,
   .default = light
   )
 
-user_color <- case_when(
-  between(user_count, 0, 100) ~ warning,
-  user_count > 100 ~ danger,
+syr_color <- case_when(
+  between(syr, 0, 100) ~ warning,
+  syr > 100 ~ danger,
   .default = light
   )
 
-country_color <- case_when(
-  between(country_count, 0, 100) ~ warning,
-  country_count > 100 ~ danger,
+nctry_color <- case_when(
+  between(nctry, 0, 100) ~ warning,
+  nctry > 100 ~ danger,
   .default = light
   )
-
-time_color <- case_when(
-  between(time_count, 0, 100) ~ warning,
-  time_count > 100 ~ danger,
-  .default = light
-  )
+plmics_color <- light
+lyr_color    <- light
+syr_color    <- light
+nctry_color  <- light
 
 ### Summary card style 
-card_style <- "text-decoration: none; color: inherit;"
-icon_style <- "display: block; margin-top:20px;  text-align: center"
+card_style   <- "text-decoration: none; color: inherit;"
+icon_style   <- "display: block; margin-top:20px;  text-align: center"
 card_p_style <- "font-size: 18px;font-color: #ffffff; margin-top: 10px;text-align: left;line-height: 1.2;"
 card_b_style <- "font-size: 2.5rem; font-color: #ffffff; margin: 0; text-align: left;font-weight: normal;"
 
@@ -251,6 +280,141 @@ box_vars_df <- var_df %>%
                               "span_years", 
                               "cov_years", 
                               "p_lmic"))
+
+
+```
+
+## Row {height=90}
+
+
+```{r}
+# Title for the four tiles
+htmltools::div(
+  style = "width: 100%; text-align: center; padding: 2px; background-color: #FFFFFF; margin-bottom: 2px;",
+  htmltools::h4("Median (for typical WDI Topic)"))
+```
+
+
+## Row {height="10%"}
+
+
+
+
+
+```{r}
+#| padding: 0px
+
+# Tile 1
+htmltools::div(
+  class = "custom-card",
+  style = paste0("background-color: ", plmics_color, "; color: white; padding: 20px;"),
+  htmltools::a(
+    href = "#license",
+    style = card_style,
+    # htmltools::tags$i(
+    #   #class = "bi bi-cc-circle fa-3x", 
+    #   style = icon_style
+    # ),
+    htmltools::p(
+      "% of LMICs",
+      style = card_p_style
+    ),
+    htmltools::h3(
+      plmics, 
+      style = card_b_style
+    )
+  )
+)
+```
+
+```{r}
+#| padding: 0px
+
+# Tile 2
+htmltools::div(
+  class = "custom-card",
+  style = paste0("background-color: ", lyr_color, "; color: white; padding: 20px;"),
+  htmltools::a(
+    href = "#license",
+    style = card_style,
+    # htmltools::tags$i(
+    #   #class = "bi bi-cc-circle fa-3x", 
+    #   style = icon_style
+    # ),
+    htmltools::p(
+      "Latest year",
+      style = card_p_style
+    ),
+    htmltools::h3(
+      lyr, 
+      style = card_b_style
+    )
+  )
+)
+```
+
+```{r}
+#| padding: 0px
+
+# Tile 3
+htmltools::div(
+  class = "custom-card",
+  style = paste0("background-color: ", syr_color, "; color: white; padding: 20px;"),
+  htmltools::a(
+    href = "#country-coverage",
+    style = card_style,
+    # htmltools::tags$i(
+    #   #class = "bi bi-globe fa-3x", 
+    #   style = icon_style
+    # ),
+    htmltools::p(
+      "Year span",
+      style = card_p_style
+    ),
+    htmltools::h3(
+      syr, 
+      style = card_b_style
+    )
+  )
+)
+```
+
+
+```{r}
+#| padding: 0px
+
+# Tile 4
+htmltools::div(
+  class = "custom-card",
+  style = paste0("background-color: ", nctry_color, "; color: white; padding: 20px;"),
+  htmltools::a(
+    href = "#country-coverage",
+    style = card_style,
+    # htmltools::tags$i(
+    #   #class = "bi bi-globe fa-3x", 
+    #   style = icon_style
+    # ),
+    htmltools::p(
+      "Number of countries",
+      style = card_p_style
+    ),
+    htmltools::h3(
+      nctry, 
+      style = card_b_style
+    )
+  )
+)
+```
+
+
+## Row {height=90}
+
+
+```{r}
+# Title for the four tiles
+htmltools::div(
+  style = "width: 100%; text-align: center; padding: 2px; background-color: #FFFFFF; margin-bottom: 2px;",
+  htmltools::h4("Overview of selected metrics"))
 ```
 
 
