@@ -44,6 +44,8 @@ score_table     <- read_csv("data/indicators_scoretable.csv")
 score_table     <- mutate(score_table, 
                           across(contains("_score_hybrid"), 
                                  ~ round(., 2)))
+
+
 ```
 
 ```{r}
@@ -61,6 +63,12 @@ max_year <- max(monitoring_data$yearlatest)
 
 #extract number of countries
 n_countries <- max(monitoring_data$n_country)
+
+score_table <- 
+  score_table |> 
+  mutate(p_country    = n_country/n_countries, 
+         p_country    = p_country*100, 
+         p_span_years = 100*span_years/max(span_years))
 ```
 
 #  {.sidebar}
@@ -224,6 +232,8 @@ var_selection <-
     "n_years", 
     "countryobs_avg",
     "countryobs_max",
+    "n_country",
+    "p_country",
     
     "yearlatest_mean", 
     "yearlatest_median",
@@ -238,7 +248,8 @@ var_selection <-
     "n_lmic", 
     "p_lmic",
     
-    "span_years", 
+    "span_years",
+    "p_span_years",
     "cov_years", 
     
     "nonmiss", 
@@ -251,6 +262,8 @@ var_descr <-
     "Number of years", 
     "Avg. country obs.", 
     "Max. country obs.", 
+    "Number of countries",
+    "% of countries",
     
     "Mean of latest year", 
     "Med. of latest year", 
@@ -266,6 +279,7 @@ var_descr <-
     "% of LMICs", 
     
     "Year span", 
+    paste0("% year span, (max ", max(score_table$span_years), ")"),
     "Year coverage", 
     
     "Non-missing", 
@@ -276,10 +290,11 @@ var_df <-
   data.frame(var_selection = var_selection, 
              var_descr     = var_descr)
 box_vars_df <- var_df %>%
-  filter(var_selection %in% c("countryobs_avg", 
-                              "span_years", 
-                              "cov_years", 
-                              "p_lmic"))
+  filter(var_selection %in% c("p_lmic", 
+                              #"yearlatest", 
+                              "p_span_years", 
+                              "p_country"))
+  
 
 
 ```
@@ -296,10 +311,6 @@ htmltools::div(
 
 
 ## Row {height="10%"}
-
-
-
-
 
 ```{r}
 #| padding: 0px
@@ -418,40 +429,165 @@ htmltools::div(
 ```
 
 
-## Row
+## Row {height=600}
 
 ```{r}
-# Create a new Plotly object for the boxplots
-p_box <- plot_ly()
 
-for (i in seq_len(nrow(box_vars_df))) {
-  var_nm    <- box_vars_df$var_selection[i]  # e.g. "yearfirst"
-  var_label <- box_vars_df$var_descr[i]      # e.g. "First Year"
+metrics      <- box_vars_df$var_selection
+metric_names <- box_vars_df$var_descr
+
+# jittered strip plots
+#----------------------------------------------------
+p_strip <- plot_ly()
+
+for (i in seq_along(metrics)) {
+  var_nm  <- metrics[i]       
+  var_lab <- metric_names[i]  
   
-  # 1) Extract the numeric data for this column
-  y_values <- score_table[[var_nm]]
+  # Vectors for x, y, and tooltip text
+  y_vals  <- score_table[[var_nm]]
+  x_vals  <- rep(var_lab, length(y_vals))
   
-  # 2) Add a box trace for these values, labeling the box with var_label
-  p_box <- p_box %>%
+  # Create a custom text field showing indicator code + value
+  # That way, each point's tooltip includes both.
+  ic_vals    <- score_table[["Indicator.Code"]]
+  hover_text <- paste0(
+    "Indicator: ", ic_vals, "<br>",
+    var_lab, ": ", round(y_vals, 1))
+  
+  p_strip <- p_strip |> 
     add_trace(
-      x    = rep(var_label, length(y_values)),  # single "category" for this variable
-      y    = y_values,
-      type = "box",
-      name = var_label
-    )
+      type      = "box",
+      x         = x_vals,
+      y         = y_vals,
+      name      = var_lab,
+      boxpoints = "all",                     
+      pointpos  = 0,                         
+      jitter    = 0.4,                       
+      fillcolor = "rgba(255,255,255,0)",     
+      line      = list(color="rgba(255,255,255,0)"),
+      marker    = list(opacity = 0.6),
+      text      = hover_text,        # custom tooltip
+      hoverinfo = "text")
 }
 
-# Then finalize layout
-p_box <- p_box %>%
+#  Fix x-axis as categorical in a known order
+#----------------------------------------------------
+x_layout <- list(type          = "category",
+                 categoryorder = "array",
+                 categoryarray = metric_names)
+
+
+#  Function for shapes + annotations
+#----------------------------------------------------
+
+make_indicator_artifacts <- function(ind_code, 
+                                     row_i, 
+                                     metrics, 
+                                     metric_names) {
+  
+  n_metrics  <- length(metrics)
+  shape_list <- vector("list", n_metrics)
+  annot_list <- vector("list", n_metrics)
+  
+  for (idx in seq_len(n_metrics)) {
+    
+    val <- row_i[[ metrics[idx] ]]
+    if (!is.na(val) && !is.null(val)) {
+      
+      x_center <- (idx - 1) 
+      x0       <- x_center - 0.25
+      x1       <- x_center + 0.25
+      
+      # 1) Red horizontal line
+      shape_list[[idx]] <- 
+        list(type = "line",
+             xref = "x",
+             yref = "y",
+             x0   = x0,
+             x1   = x1,
+             y0   = val,
+             y1   = val,
+             line = list(color = "red", 
+                         width = 2))
+      
+      # 2) ind text and value
+      text_lab <- paste0(ind_code, 
+                         ": ", 
+                         round(val, 1))
+      
+      annot_list[[idx]] <- 
+        list(x         = x1 + 0.05,
+             y         = val,
+             xref      = "x",
+             yref      = "y",
+             text      = text_lab,
+             xanchor   = "left",
+             yanchor   = "middle",
+             showarrow = FALSE,
+             font      = list(color = "red"),
+             yshift    = 0)
+    }
+  }
+  
+  shape_list <- shape_list[!sapply(shape_list, is.null)]
+  annot_list <- annot_list[!sapply(shape_list, is.null)]
+  
+  list(shapes      = shape_list,
+       annotations = annot_list)
+}
+
+
+#  dropdown interactivity
+#----------------------------------------------------
+indicators <- unique(score_table$Indicator.Code)
+
+buttons <- lapply(indicators, 
+                  function(ind) {
+  row_i <- score_table |> 
+    filter(Indicator.Code == ind) |> 
+    slice(1)
+  
+  artifacts <- make_indicator_artifacts(ind, 
+                                        row_i, 
+                                        metrics, 
+                                        metric_names)
+  shape_list <- artifacts$shapes
+  annot_list <- artifacts$annotations
+  
+  list(label  = ind,
+       method = "relayout",
+       args   = list(list(shapes      = shape_list,
+                          annotations = annot_list)))
+})
+
+# Optional "None" button
+none_button <- list(
+  label  = "None",
+  method = "relayout",
+  args   = list(list(shapes      = list(), 
+                     annotations = list())))
+
+updatemenus <-
+  list(list(type    = "dropdown",
+            active  = 0,
+            buttons = c(list(none_button), 
+                        buttons)))
+
+
+p_strip <- p_strip |> 
   layout(
-    title = "Boxplots for Selected Columns",
-    xaxis = list(title = ""),
-    yaxis = list(title = "Value")
-  )
+    title       = "Selected metrics for all indicators",
+    xaxis       = x_layout,
+    yaxis       = list(title = "Value"),
+    boxmode     = "overlay",
+    shapes      = list(),
+    annotations = list(),
+    updatemenus = updatemenus)
 
-p_box
-
-
+# return
+#----------------------------------------------------
+p_strip
 ```
 
 
