@@ -1,0 +1,14 @@
+name: wdi_indicator_monitor-public-internaltest
+title: wdi_indicator_monitor-public-internaltest
+username: zprinsloo
+account: zprinsloo
+server: w0lxdrconn01
+hostUrl: https://w0lxdrconn01/__api__
+appId: 515
+bundleId:
+url: https://w0lxdrconn01/content/cdcbf202-f668-4aba-8180-b489b6ea81bd/
+version: 1
+quarto_version: 1.6.40
+quarto_engines: markdown, knitr
+asMultiple: FALSE
+asStatic: FALSE
