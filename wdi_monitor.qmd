@@ -60,6 +60,7 @@ n_indicators <- monitoring_data %>%
 #extract number of years
 min_year <- min(monitoring_data$yearfirst)
 max_year <- max(monitoring_data$yearlatest)
+n_years  <- max_year - min_year
 
 #extract number of countries
 n_countries <- max(monitoring_data$n_country)
@@ -185,6 +186,21 @@ nctry <- score_table |>
   mean(na.rm = T) |> 
   round(1)
 
+# New tile stats------------------
+med_n_country <- 
+  median(score_table$n_country)
+med_p_lmics <- 
+  paste0(median(score_table$p_lmic), 
+         "%")
+med_yr_span <- 
+  median(score_table$span_years)
+med_latest_year <- 
+  median(score_table$yearlatest)
+
+
+
+
+
 # prep tile colours
 plmics_color <- case_when(
   between(plmics, 0, 100) ~ warning,
@@ -279,7 +295,7 @@ var_descr <-
     "% of LMICs", 
     
     "Year span", 
-    paste0("% year span, (max ", max(score_table$span_years), ")"),
+    paste0("% year span, total ", max(score_table$span_years)),
     "Year coverage", 
     
     "Non-missing", 
@@ -299,134 +315,92 @@ box_vars_df <- var_df %>%
 
 ```
 
-## Row {height=90}
 
-
-```{r}
-# Title for the four tiles
-htmltools::div(
-  style = "width: 100%; text-align: center; padding: 2px; background-color: #FFFFFF; margin-bottom: 2px;",
-  htmltools::h4("Median (for typical WDI Topic)"))
-```
-
-
-## Row {height="10%"}
+## Row
 
 ```{r}
-#| padding: 0px
+# This single code chunk is one column occupying the entire row.
 
-# Tile 1
-htmltools::div(
-  class = "custom-card",
-  style = paste0("background-color: ", plmics_color, "; color: white; padding: 20px;"),
-  htmltools::a(
-    href = "#license",
-    style = card_style,
-    # htmltools::tags$i(
-    #   #class = "bi bi-cc-circle fa-3x", 
-    #   style = icon_style
-    # ),
-    htmltools::p(
-      "% of LMICs",
-      style = card_p_style
-    ),
-    htmltools::h3(
-      plmics, 
-      style = card_b_style
+# # Example objects for demonstration
+# n_countries     <- 150
+# med_n_country   <- 40
+# med_p_lmics     <- "33%"
+# n_years         <- 20
+# med_yr_span     <- 15
+# med_latest_year <- 2018
+
+ # ====================== Tile 1: Country Coverage ======================
+  htmltools::div(
+    class = "custom-card",
+    style = "
+      background-color: #f8f9fa; 
+      color: #333;
+      width: 100%;
+      padding: 20px;
+      border-radius: 5px;
+    ",
+    # Centered header
+    htmltools::h3("Country coverage", style="text-align: center; margin-top: 0;"),
+    
+    # A small table to align label-value pairs
+    htmltools::tags$table(
+      style = "width:100%; border-collapse: collapse;",
+      # Row 1: "Total economies" + n_countries
+      htmltools::tags$tr(
+        htmltools::tags$td("Total number of economies:", style="padding: 5px;"),
+        htmltools::tags$td(n_countries,       style="padding: 5px; text-align: right;")
+      ),
+      # Row 2: "Median economies per ind." + med_n_country
+      htmltools::tags$tr(
+        htmltools::tags$td("Median economies per indicator:", style="padding: 5px;"),
+        htmltools::tags$td(med_n_country,                 style="padding: 5px; text-align: right;")
+      ),
+      # Row 3: "Median % of LMICs" + med_p_lmics
+      htmltools::tags$tr(
+        htmltools::tags$td("Median % of LMICs per indicator:", style="padding: 5px;"),
+        htmltools::tags$td(med_p_lmics,          style="padding: 5px; text-align: right;")
+      )
     )
   )
-)
 ```
 
-```{r}
-#| padding: 0px
 
-# Tile 2
-htmltools::div(
-  class = "custom-card",
-  style = paste0("background-color: ", lyr_color, "; color: white; padding: 20px;"),
-  htmltools::a(
-    href = "#license",
-    style = card_style,
-    # htmltools::tags$i(
-    #   #class = "bi bi-cc-circle fa-3x", 
-    #   style = icon_style
-    # ),
-    htmltools::p(
-      "Latest year",
-      style = card_p_style
-    ),
-    htmltools::h3(
-      lyr, 
-      style = card_b_style
+```{r}
+ # ====================== Tile 2: Time Coverage ======================
+  htmltools::div(
+    class = "custom-card",
+    style = "
+      background-color: #f8f9fa; 
+      color: #333;
+      width: 100%;
+      padding: 20px;
+      border-radius: 5px;
+    ",
+    # Centered header
+    htmltools::h3("Time coverage", style="text-align: center; margin-top: 0;"),
+    
+    # Another table for these stats
+    htmltools::tags$table(
+      style = "width:100%; border-collapse: collapse;",
+      # Row 1: "Overall number of years" + n_years
+      htmltools::tags$tr(
+        htmltools::tags$td("Total number of years:", style="padding: 5px;"),
+        htmltools::tags$td(n_years,                    style="padding: 5px; text-align: right;")
+      ),
+      # Row 2: "Median year span" + med_yr_span
+      htmltools::tags$tr(
+        htmltools::tags$td("Median year span per indicator:", style="padding: 5px;"),
+        htmltools::tags$td(med_yr_span,         style="padding: 5px; text-align: right;")
+      ),
+      # Row 3: "Median latest year" + med_latest_year
+      htmltools::tags$tr(
+        htmltools::tags$td("Median latest year per indicator:", style="padding: 5px;"),
+        htmltools::tags$td(med_latest_year,       style="padding: 5px; text-align: right;")
+      )
     )
   )
-)
 ```
 
-```{r}
-#| padding: 0px
-
-# Tile 3
-htmltools::div(
-  class = "custom-card",
-  style = paste0("background-color: ", syr_color, "; color: white; padding: 20px;"),
-  htmltools::a(
-    href = "#country-coverage",
-    style = card_style,
-    # htmltools::tags$i(
-    #   #class = "bi bi-globe fa-3x", 
-    #   style = icon_style
-    # ),
-    htmltools::p(
-      "Year span",
-      style = card_p_style
-    ),
-    htmltools::h3(
-      syr, 
-      style = card_b_style
-    )
-  )
-)
-```
-
-
-```{r}
-#| padding: 0px
-
-# Tile 4
-htmltools::div(
-  class = "custom-card",
-  style = paste0("background-color: ", nctry_color, "; color: white; padding: 20px;"),
-  htmltools::a(
-    href = "#country-coverage",
-    style = card_style,
-    # htmltools::tags$i(
-    #   #class = "bi bi-globe fa-3x", 
-    #   style = icon_style
-    # ),
-    htmltools::p(
-      "Number of countries",
-      style = card_p_style
-    ),
-    htmltools::h3(
-      nctry, 
-      style = card_b_style
-    )
-  )
-)
-```
-
-
-## Row {height=90}
-
-
-```{r}
-# Title for the four tiles
-htmltools::div(
-  style = "width: 100%; text-align: center; padding: 2px; background-color: #FFFFFF; margin-bottom: 2px;",
-  htmltools::h4("Overview of selected metrics"))
-```
 
 
 ## Row {height=600}
@@ -447,9 +421,6 @@ for (i in seq_along(metrics)) {
   # Vectors for x, y, and tooltip text
   y_vals  <- score_table[[var_nm]]
   x_vals  <- rep(var_lab, length(y_vals))
-  
-  # Create a custom text field showing indicator code + value
-  # That way, each point's tooltip includes both.
   ic_vals    <- score_table[["Indicator.Code"]]
   hover_text <- paste0(
     "Indicator: ", ic_vals, "<br>",
