@@ -88,7 +88,7 @@ This dashboard displays <br/> statistics for:
 |--------------|------------------------------|
 | **Indicators** | `{r} scales::comma(n_indicators)` |
 | **Years** | `{r} paste0(min_year, " - ", max_year)` |
-| **Countries** | `{r} n_countries` |
+| **Economies** | `{r} n_countries` |
 
 <!-- <h3> Download the Data </h3> -->
 
@@ -136,9 +136,9 @@ user_count <- score_table %>%
   filter(visitors < 50) %>% 
   nrow()
 
-# country count
-#count number of indicators failing on country coverage
-country_count <- score_table %>% 
+# economy count
+#count number of indicators failing on economy coverage
+economy_count <- score_table %>% 
   filter(n_country < 50) %>% 
   nrow()
 
@@ -276,10 +276,10 @@ var_descr <-
   c("First year", 
     "Total obs.", 
     "Number of years", 
-    "Avg. country obs.", 
-    "Max. country obs.", 
-    "Number of countries",
-    "% of countries",
+    "Avg. economy obs.", 
+    "Max. economy obs.", 
+    "Number of economies",
+    "% of economies",
     
     "Mean of latest year", 
     "Med. of latest year", 
@@ -319,15 +319,6 @@ box_vars_df <- var_df %>%
 ## Row
 
 ```{r}
-# This single code chunk is one column occupying the entire row.
-
-# # Example objects for demonstration
-# n_countries     <- 150
-# med_n_country   <- 40
-# med_p_lmics     <- "33%"
-# n_years         <- 20
-# med_yr_span     <- 15
-# med_latest_year <- 2018
 
  # ====================== Tile 1: Country Coverage ======================
   htmltools::div(
@@ -340,28 +331,30 @@ box_vars_df <- var_df %>%
       border-radius: 5px;
     ",
     # Centered header
-    htmltools::h3("Country coverage", style="text-align: center; margin-top: 0;"),
+    htmltools::h3("Geographic coverage", 
+                  style = "text-align: center; margin-top: 0;"),
     
     # A small table to align label-value pairs
     htmltools::tags$table(
       style = "width:100%; border-collapse: collapse;",
       # Row 1: "Total economies" + n_countries
       htmltools::tags$tr(
-        htmltools::tags$td("Total number of economies:", style="padding: 5px;"),
-        htmltools::tags$td(n_countries,       style="padding: 5px; text-align: right;")
-      ),
+        htmltools::tags$td("Total number of economies:", 
+                           style = "padding: 5px;"),
+        htmltools::tags$td(n_countries,       
+                           style = "padding: 5px; text-align: right;")),
       # Row 2: "Median economies per ind." + med_n_country
       htmltools::tags$tr(
-        htmltools::tags$td("Median economies per indicator:", style="padding: 5px;"),
-        htmltools::tags$td(med_n_country,                 style="padding: 5px; text-align: right;")
-      ),
+        htmltools::tags$td("Median economies per indicator:", 
+                           style="padding: 5px;"),
+        htmltools::tags$td(med_n_country,                 
+                           style = "padding: 5px; text-align: right;")),
       # Row 3: "Median % of LMICs" + med_p_lmics
       htmltools::tags$tr(
-        htmltools::tags$td("Median % of LMICs per indicator:", style="padding: 5px;"),
-        htmltools::tags$td(med_p_lmics,          style="padding: 5px; text-align: right;")
-      )
-    )
-  )
+        htmltools::tags$td("Median % of LMICs per indicator:", 
+                           style="padding: 5px;"),
+        htmltools::tags$td(med_p_lmics,          
+                           style = "padding: 5px; text-align: right;"))))
 ```
 
 
@@ -378,27 +371,27 @@ box_vars_df <- var_df %>%
     ",
     # Centered header
     htmltools::h3("Time coverage", style="text-align: center; margin-top: 0;"),
-    
     # Another table for these stats
     htmltools::tags$table(
       style = "width:100%; border-collapse: collapse;",
       # Row 1: "Overall number of years" + n_years
       htmltools::tags$tr(
-        htmltools::tags$td("Total number of years:", style="padding: 5px;"),
-        htmltools::tags$td(n_years,                    style="padding: 5px; text-align: right;")
-      ),
+        htmltools::tags$td("Total number of years:", 
+                           style = "padding: 5px;"),
+        htmltools::tags$td(n_years,                   
+                           style = "padding: 5px; text-align: right;")),
       # Row 2: "Median year span" + med_yr_span
       htmltools::tags$tr(
-        htmltools::tags$td("Median year span per indicator:", style="padding: 5px;"),
-        htmltools::tags$td(med_yr_span,         style="padding: 5px; text-align: right;")
-      ),
+        htmltools::tags$td("Median year span per indicator:", 
+                           style = "padding: 5px;"),
+        htmltools::tags$td(med_yr_span,         
+                           style = "padding: 5px; text-align: right;")),
       # Row 3: "Median latest year" + med_latest_year
       htmltools::tags$tr(
-        htmltools::tags$td("Median latest year per indicator:", style="padding: 5px;"),
-        htmltools::tags$td(med_latest_year,       style="padding: 5px; text-align: right;")
-      )
-    )
-  )
+        htmltools::tags$td("Median latest year per indicator:", 
+                           style = "padding: 5px;"),
+        htmltools::tags$td(med_latest_year,       
+                           style = "padding: 5px; text-align: right;"))))
 ```
 
 
@@ -890,16 +883,16 @@ p_strip
 
 <!-- ``` -->
 
-# Country Coverage
+# Geographic Coverage
 
-The number of countries for which data is available is a key metric to understand the geographical coverage of the indicator.
+The number of economies for which data is available is a key metric to understand the geographical coverage of the indicator.
 
-- To display only the indicators with poor country coverage (under 50 countries), select the checkbox under the **'Number of Countries'** column.
+- To display only the indicators with poor economy coverage (under 50 economies), select the checkbox under the **'Number of Economies'** column.
 
 - Indicators with a score below 2 are highlighted. For a detailed explanation of the methodology, refer to the [Quantitative Scoring](#quantitative-scoring) section.
 
 ```{r}
-#| title: Country Coverage Table
+#| title: Economy Coverage Table
 
 ctr_table <- select(score_table, 
                     Indicator.Code, 
@@ -956,8 +949,7 @@ checkbox_filter_ctr <- function(name) {
       ),
       style = "margin-right: 5px;"
     ),
-    "Only show indicators with fewer than 50 countries"
-  )
+    "Only show indicators with fewer than 50 countries")
 }
 
 reactable(
@@ -969,7 +961,7 @@ reactable(
     n_lmic = colDef(name = "Number of LMICs"),
     p_lmic = colDef(name = "Percent of LMICs"),
     n_country = colDef(
-      name = "Number of Countries",
+      name = "Number of Economies",
       filterable = TRUE,
       filterMethod = JS("
         function(rows, columnId, value) {
@@ -1011,8 +1003,7 @@ reactable(
     )
   ),
   defaultPageSize = 10,
-  elementId = "ctr-tbl"
-)
+  elementId       = "ctr-tbl")
 
 ```
 
