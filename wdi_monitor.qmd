@@ -74,21 +74,16 @@ score_table <-
 
 #  {.sidebar}
 
-This dashboard displays <br/> statistics for:
+<!-- This dashboard displays <br/> statistics for: -->
+<h3 style="text-align: center;">Summary</h3>
 
-|              |                              |
-|--------------|------------------------------|
-| **Database** | `{r} params$database`        |
-| **Unit**     | `{r} params$unit`            |
-| **Month**    | `{r} time_period`            |
-
-<h3> WDI Summary  </h3>
-
-|              |                              |
-|--------------|------------------------------|
-| **Indicators** | `{r} scales::comma(n_indicators)` |
-| **Years** | `{r} paste0(min_year, " - ", max_year)` |
-| **Economies** | `{r} n_countries` |
+|                |                                         |
+|----------------|-----------------------------------------|
+| **Database**   | `{r} params$database`                   |
+| **Unit**       | `{r} params$unit`                       |
+| **Month**      | `{r} time_period`                       | 
+| **Indicators** | `{r} scales::comma(n_indicators)`       |
+| **Years**      | `{r} paste0(min_year, " - ", max_year)` |
 
 <!-- <h3> Download the Data </h3> -->
 
@@ -106,13 +101,13 @@ score_table |>
   download_this(
     output_name      = "WDI Monitoring data set",
     output_extension = ".xlsx",
-    button_label     = "Download indicator score",
+    button_label     = "Download WDI monitoring data",
     button_type      = "warning",
     has_icon         = TRUE,
     icon             = "fa fa-save")
 ```
 
-# All
+# Indicator Overview
 
 ```{r}
 #| label: all-values
@@ -279,7 +274,7 @@ var_descr <-
     "Avg. economy obs.", 
     "Max. economy obs.", 
     "Number of economies",
-    "% of economies",
+    "Economies",
     
     "Mean of latest year", 
     "Med. of latest year", 
@@ -292,10 +287,10 @@ var_descr <-
     "Med. of mean year", 
     
     "Number of LMICs", 
-    "% of LMICs", 
+    "LMICs", 
     
     "Year span", 
-    paste0("% year span, total ", max(score_table$span_years)),
+    paste0("Year span, total ", max(score_table$span_years)),
     "Year coverage", 
     
     "Non-missing", 
@@ -316,11 +311,11 @@ box_vars_df <- var_df %>%
 ```
 
 
-## Row
+## Row {height=20%}
 
 ```{r}
 
- # ====================== Tile 1: Country Coverage ======================
+ # ====================== Tile 1: Geographic Coverage ======================
   htmltools::div(
     class = "custom-card",
     style = "
@@ -345,13 +340,13 @@ box_vars_df <- var_df %>%
                            style = "padding: 5px; text-align: right;")),
       # Row 2: "Median economies per ind." + med_n_country
       htmltools::tags$tr(
-        htmltools::tags$td("Median economies per indicator:", 
+        htmltools::tags$td("Median number of economies:", 
                            style="padding: 5px;"),
         htmltools::tags$td(med_n_country,                 
                            style = "padding: 5px; text-align: right;")),
       # Row 3: "Median % of LMICs" + med_p_lmics
       htmltools::tags$tr(
-        htmltools::tags$td("Median % of LMICs per indicator:", 
+        htmltools::tags$td("Median % of LMICs:", 
                            style="padding: 5px;"),
         htmltools::tags$td(med_p_lmics,          
                            style = "padding: 5px; text-align: right;"))))
@@ -382,13 +377,13 @@ box_vars_df <- var_df %>%
                            style = "padding: 5px; text-align: right;")),
       # Row 2: "Median year span" + med_yr_span
       htmltools::tags$tr(
-        htmltools::tags$td("Median year span per indicator:", 
+        htmltools::tags$td("Median year span:", 
                            style = "padding: 5px;"),
         htmltools::tags$td(med_yr_span,         
                            style = "padding: 5px; text-align: right;")),
       # Row 3: "Median latest year" + med_latest_year
       htmltools::tags$tr(
-        htmltools::tags$td("Median latest year per indicator:", 
+        htmltools::tags$td("Median latest year:", 
                            style = "padding: 5px;"),
         htmltools::tags$td(med_latest_year,       
                            style = "padding: 5px; text-align: right;"))))
@@ -537,13 +532,12 @@ updatemenus <-
             active  = 0,
             buttons = c(list(none_button), 
                         buttons)))
-
-
-p_strip <- p_strip |> 
+p_strip <- 
+  p_strip |> 
   layout(
-    title       = "Selected metrics for all indicators",
+    title       = "Percentage of each category covered per indicator",
     xaxis       = x_layout,
-    yaxis       = list(title = "Value"),
+    yaxis       = list(title = "Percentage"),
     boxmode     = "overlay",
     shapes      = list(),
     annotations = list(),
@@ -560,9 +554,8 @@ p_strip
 
 The number of economies for which data is available is a key metric to understand the geographical coverage of the indicator.
 
-- To display only the indicators with poor economy coverage (under 50 economies), select the checkbox under the **'Number of Economies'** column.
+To display only the indicators with poor economy coverage (under 50 economies), select the checkbox under the **'Number of Economies'** column.
 
-- Indicators with a score below 2 are highlighted. For a detailed explanation of the methodology, refer to the [Quantitative Scoring](#quantitative-scoring) section.
 
 ```{r}
 #| title: Economy Coverage Table
@@ -625,16 +618,24 @@ checkbox_filter_ctr <- function(name) {
     "Only show indicators with fewer than 50 countries")
 }
 
+
+
 reactable(
-  ctr_table,  
+  ctr_table,
   filterable = TRUE,
+
+  # Globally center all headings:
+  defaultColDef = colDef(
+    headerStyle = list(textAlign = "center")
+  ),
+
   columns = list(
     Indicator.Code = colDef(name = "Code"),
     Indicator.Name = colDef(name = "Name"),
-    n_lmic = colDef(name = "Number of LMICs"),
-    p_lmic = colDef(name = "Percent of LMICs"),
+    n_lmic  = colDef(name = "Number of LMICs"),
+    p_lmic  = colDef(name = "Percent of LMICs"),
     n_country = colDef(
-      name = "Number of Economies",
+      name       = "Number of Economies",
       filterable = TRUE,
       filterMethod = JS("
         function(rows, columnId, value) {
@@ -650,12 +651,12 @@ reactable(
       filterInput = checkbox_filter_ctr("n_country")
     ),
     datatopic = colDef(
-      name = "Topic",
+      name        = "Topic",
       filterInput = filter_fct_ctr
     ),
     geographic_score_hybrid = colDef(
-      name = "Geographical Coverage Score",
-      filterable = TRUE,
+      name        = "Geographical Coverage Score",
+      filterable  = TRUE,
       filterMethod = JS("
         function(rows, columnId, filterValue) {
           return rows.filter(function(row) {
@@ -676,17 +677,16 @@ reactable(
     )
   ),
   defaultPageSize = 10,
-  elementId       = "ctr-tbl")
-
+  elementId = "ctr-tbl"
+)
 ```
 
 # Time Coverage
 
 An indicator should have recent data available and the indicator should ideally be updated as frequently as possible.
 
-- To display only the indicators with no data in the last 10 years, select the checkbox under the **'Latest Year'** column.
+To display only the indicators with no data in the last 10 years, select the checkbox under the **'Latest Year'** column.
 
-- Indicators with a score below 2 are highlighted. For a detailed explanation of the methodology, refer to the [Quantitative Scoring](#quantitative-scoring) section.
 
 ```{r}
 #| title: Time Coverage Table
@@ -799,8 +799,6 @@ reactable(
   defaultPageSize = 10,
   elementId = "time-tbl"
 )
-
-
 ```
 
 
