@@ -393,147 +393,524 @@ box_vars_df <- var_df %>%
 
 ## Row {height=600}
 
-```{r}
+```{r jitter-strip-plot}
+# 
+# metrics      <- box_vars_df$var_selection
+# metric_names <- box_vars_df$var_descr
+# 
+# # jittered strip plots
+# #----------------------------------------------------
+# p_strip <- plot_ly()
+# 
+# for (i in seq_along(metrics)) {
+#   var_nm  <- metrics[i]       
+#   var_lab <- metric_names[i]  
+#   
+#   # Vectors for x, y, and tooltip text
+#   y_vals  <- score_table[[var_nm]]
+#   x_vals  <- rep(var_lab, length(y_vals))
+#   ic_vals    <- score_table[["Indicator.Code"]]
+#   hover_text <- paste0(
+#     "Indicator: ", ic_vals, "<br>",
+#     var_lab, ": ", round(y_vals, 1))
+#   
+#   p_strip <- p_strip |> 
+#     add_trace(
+#       type      = "box",
+#       x         = x_vals,
+#       y         = y_vals,
+#       name      = var_lab,
+#       boxpoints = "all",                     
+#       pointpos  = 0,                         
+#       jitter    = 0.4,                       
+#       fillcolor = "rgba(255,255,255,0)",     
+#       line      = list(color="rgba(255,255,255,0)"),
+#       marker    = list(opacity = 0.6),
+#       text      = hover_text,        # custom tooltip
+#       hoverinfo = "text")
+# }
+# 
+# #  Fix x-axis as categorical in a known order
+# #----------------------------------------------------
+# x_layout <- list(type          = "category",
+#                  categoryorder = "array",
+#                  categoryarray = metric_names)
+# 
+# 
+# #  Function for shapes + annotations
+# #----------------------------------------------------
+# 
+# make_indicator_artifacts <- function(ind_code, 
+#                                      row_i, 
+#                                      metrics, 
+#                                      metric_names) {
+#   
+#   n_metrics  <- length(metrics)
+#   shape_list <- vector("list", n_metrics)
+#   annot_list <- vector("list", n_metrics)
+#   
+#   for (idx in seq_len(n_metrics)) {
+#     
+#     val <- row_i[[ metrics[idx] ]]
+#     if (!is.na(val) && !is.null(val)) {
+#       
+#       x_center <- (idx - 1) 
+#       x0       <- x_center - 0.25
+#       x1       <- x_center + 0.25
+#       
+#       # 1) Red horizontal line
+#       shape_list[[idx]] <- 
+#         list(type = "line",
+#              xref = "x",
+#              yref = "y",
+#              x0   = x0,
+#              x1   = x1,
+#              y0   = val,
+#              y1   = val,
+#              line = list(color = "red", 
+#                          width = 2))
+#       
+#       # 2) ind text and value
+#       text_lab <- paste0(round(val, 1))
+#       
+#       annot_list[[idx]] <- 
+#         list(x         = x1 + 0.05,
+#              y         = val,
+#              xref      = "x",
+#              yref      = "y",
+#              text      = text_lab,
+#              xanchor   = "left",
+#              yanchor   = "middle",
+#              showarrow = FALSE,
+#              font      = list(color = "red"),
+#              yshift    = 0)
+#     }
+#   }
+#   
+#   # We initialize its name as e.g. "No indicator selected" or "None"
+# p_strip <- p_strip %>%
+#   add_trace(
+#     x = c(NA, NA),
+#     y = c(NA, NA),
+#     mode = "lines",
+#     line = list(color = "red"),
+#     name = "None",           # Legend label before any indicator is selected
+#     showlegend = TRUE
+#   )
+#   
+#   shape_list <- shape_list[!sapply(shape_list, is.null)]
+#   annot_list <- annot_list[!sapply(shape_list, is.null)]
+#   
+#   list(shapes      = shape_list,
+#        annotations = annot_list)
+# }
+# 
+# 
+# #  dropdown interactivity
+# #----------------------------------------------------
+# indicators <- unique(score_table$Indicator.Code)
+# 
+# buttons <- lapply(indicators, 
+#                   function(ind) {
+#   row_i <- score_table |> 
+#     filter(Indicator.Code == ind) |> 
+#     slice(1)
+#   
+#   artifacts <- make_indicator_artifacts(ind, 
+#                                         row_i, 
+#                                         metrics, 
+#                                         metric_names)
+#   shape_list <- artifacts$shapes
+#   annot_list <- artifacts$annotations
+#   
+#   list(label  = ind,
+#        method = "relayout",
+#        args   = list(list(shapes      = shape_list,
+#                           annotations = annot_list)))
+# })
+# 
+# # Optional "None" button
+# none_button <- list(
+#   label  = "None",
+#   method = "relayout",
+#   args   = list(list(shapes      = list(), 
+#                      annotations = list())))
+# 
+# updatemenus <-
+#   list(list(type    = "dropdown",
+#             active  = 0,
+#             buttons = c(list(none_button), 
+#                         buttons)))
+# p_strip <- 
+#   p_strip |> 
+#   layout(
+#     title       = "Percentage of each category covered per indicator",
+#     xaxis       = x_layout,
+#     yaxis       = list(title = "Percentage"),
+#     boxmode     = "overlay",
+#     shapes      = list(),
+#     annotations = list(),
+#     updatemenus = updatemenus)
+# 
+# # return
+# #----------------------------------------------------
+# p_strip
+
+
+# metrics      <- box_vars_df$var_selection
+# metric_names <- box_vars_df$var_descr
+# 
+# # 1) Build box traces
+# p_strip <- plot_ly()
+# 
+# for (i in seq_along(metrics)) {
+#   var_nm  <- metrics[i]
+#   var_lab <- metric_names[i]
+#   
+#   y_vals   <- score_table[[var_nm]]
+#   x_vals   <- rep(var_lab, length(y_vals))
+#   ic_vals  <- score_table[["Indicator.Code"]]
+#   
+#   hover_text <- paste0(
+#     "Indicator: ", ic_vals, "<br>",
+#     var_lab, ": ", round(y_vals, 1)
+#   )
+#   
+#   p_strip <- p_strip |>
+#     add_trace(
+#       type      = "box",
+#       x         = x_vals,
+#       y         = y_vals,
+#       name      = var_lab,
+#       boxpoints = "all",
+#       pointpos  = 0,
+#       jitter    = 0.4,
+#       fillcolor = "rgba(255,255,255,0)",
+#       line      = list(color="rgba(255,255,255,0)"),
+#       marker    = list(opacity = 0.6),
+#       text      = hover_text,
+#       hoverinfo = "text"
+#     )
+# }
+# 
+# # 2) X-axis: categorical, custom order
+# x_layout <- list(
+#   type          = "category",
+#   categoryorder = "array",
+#   categoryarray = metric_names
+# )
+# 
+# # 3) Function to create shapes (lines) + annotations (values on lines + bottom-left code)
+# make_indicator_artifacts <- function(ind_code, row_i, metrics, metric_names) {
+#   
+#   n_metrics  <- length(metrics)
+#   shape_list <- vector("list", n_metrics)
+#   annot_list <- vector("list", n_metrics)
+#   
+#   # Build lines + numeric annotations
+#   for (idx in seq_len(n_metrics)) {
+#     val <- row_i[[ metrics[idx] ]]
+#     if (!is.na(val) && !is.null(val)) {
+#       
+#       x_center <- (idx - 1)
+#       x0 <- x_center - 0.25
+#       x1 <- x_center + 0.25
+#       
+#       # Horizontal line
+#       shape_list[[idx]] <- list(
+#         type = "line",
+#         xref = "x",
+#         yref = "y",
+#         x0   = x0,
+#         x1   = x1,
+#         y0   = val,
+#         y1   = val,
+#         line = list(color = "red", width = 2)
+#       )
+#       
+#       # Just the numeric value near the line
+#       text_lab <- paste0(round(val, 1))
+#       annot_list[[idx]] <- list(
+#         x         = x1 + 0.05,
+#         y         = val,
+#         xref      = "x",
+#         yref      = "y",
+#         text      = text_lab,
+#         xanchor   = "left",
+#         yanchor   = "middle",
+#         showarrow = FALSE,
+#         font      = list(color = "red"),
+#         yshift    = 0
+#       )
+#     }
+#   }
+#   
+#   # ~~~~~~~~~ EXTRA ANNOTATION: "Indicator: <code>" at bottom-left
+#   # We place it in "paper" coordinates so it pins to the overall plot, not the data scale
+#   # e.g., x=0.02, y=0.02 => near bottom-left corner
+#   corner_annot <- list(
+#     x         = -0.25,
+#     y         = -0.045,
+#     xref      = "paper",
+#     yref      = "paper",
+#     text      = paste0("Indicator: ", ind_code),
+#     xanchor   = "left",
+#     yanchor   = "bottom",
+#     showarrow = FALSE,
+#     font      = list(color = "red"))
+#   
+#   # Append that extra annotation
+#   annot_list[[n_metrics + 1]] <- corner_annot
+#   
+#   # Filter out any NULL shapes/annotations
+#   shape_list <- shape_list[!sapply(shape_list, is.null)]
+#   annot_list <- annot_list[!sapply(annot_list, is.null)]
+#   
+#   list(
+#     shapes      = shape_list,
+#     annotations = annot_list
+#   )
+# }
+# 
+# # 4) Build dropdown: each indicator => shapes + annotations + bottom-left code
+# indicators <- unique(score_table$Indicator.Code)
+# 
+# buttons <- lapply(indicators, function(ind) {
+#   row_i <- score_table |>
+#     filter(Indicator.Code == ind) |>
+#     slice(1)
+#   
+#   artifacts <- make_indicator_artifacts(ind, row_i, metrics, metric_names)
+#   shape_list <- artifacts$shapes
+#   annot_list <- artifacts$annotations
+#   
+#   list(
+#     label  = ind,
+#     method = "relayout",  # We'll just override layout with shapes+annotations
+#     args   = list(list(
+#       shapes      = shape_list,
+#       annotations = annot_list
+#     ))
+#   )
+# })
+# 
+# # "None" button
+# none_button <- list(
+#   label  = "None",
+#   method = "relayout",
+#   args   = list(list(
+#     shapes      = list(),
+#     annotations = list()
+#   ))
+# )
+# 
+# updatemenus <- list(
+#   list(
+#     type   = "dropdown",
+#     active = 0,
+#     buttons = c(list(none_button), buttons)
+#   )
+# )
+# 
+# # 5) Final layout
+# p_strip <- p_strip |>
+#   layout(
+#     title       = "Percentage of each category covered per indicator",
+#     xaxis       = x_layout,
+#     yaxis       = list(title = "Percentage"),
+#     boxmode     = "overlay",
+#     shapes      = list(),
+#     annotations = list(),
+#     updatemenus = updatemenus
+#   )
+
+
+
+
+
+
+
+
+
+make_indicator_artifacts <- function(ind_code, ind_name, row_i, metrics, metric_names) {
+  
+  # 'row_i' is a 1-row df containing columns: Indicator.Code, Indicator.Name, plus your 4 metrics
+  n_metrics  <- length(metrics)
+  shape_list <- vector("list", n_metrics)
+  annot_list <- vector("list", n_metrics)
+  
+  # 1) Horizontal lines + numeric annotations
+  for (idx in seq_len(n_metrics)) {
+    val <- row_i[[ metrics[idx] ]]
+    if (!is.na(val) && !is.null(val)) {
+      
+      x_center <- (idx - 1)
+      x0       <- x_center - 0.25
+      x1       <- x_center + 0.25
+      
+      # (a) Red horizontal line
+      shape_list[[idx]] <- list(
+        type = "line",
+        xref = "x",
+        yref = "y",
+        x0   = x0,
+        x1   = x1,
+        y0   = val,
+        y1   = val,
+        line = list(color = "red", width = 2)
+      )
+      
+      # (b) Numeric value near the line
+      text_lab <- paste0(round(val, 1))
+      annot_list[[idx]] <- list(
+        x         = x1 + 0.05,
+        y         = val,
+        xref      = "x",
+        yref      = "y",
+        text      = text_lab,
+        xanchor   = "left",
+        yanchor   = "middle",
+        showarrow = FALSE,
+        font      = list(color = "red")
+      )
+    }
+  }
+  
+  # 2) OPTIONAL: If you want a bottom-left annotation for the indicator code:
+  bottom_left_annot <- list(
+    x = 0,
+    y = -0.075,
+    xref = "paper",
+    yref = "paper",
+    text = paste0("Indicator: ", ind_name),
+    xanchor = "left",
+    yanchor = "bottom",
+    showarrow = FALSE,
+    font = list(color = "black")
+  )
+  
+  # Add that to the annotation list if you want to keep it
+  annot_list[[n_metrics + 1]] <- bottom_left_annot
+  
+  # 3) NEW SUBTITLE at the top, showing the 'Indicator.Name' from row_i
+  indicator_name <- row_i$Indicator.Name
+  subtitle_annot <- list(
+    x = 0.5,
+    y = 1.08,
+    xref = "paper",
+    yref = "paper",
+    text = paste0(indicator_name, " highlighted in red"),
+    xanchor = "middle",
+    yanchor = "bottom",
+    showarrow = FALSE,
+    font = list(color = "black")
+  )
+  annot_list[[n_metrics + 2]] <- subtitle_annot
+  
+  # Remove NULL entries
+  shape_list <- shape_list[!sapply(shape_list, is.null)]
+  annot_list <- annot_list[!sapply(annot_list, is.null)]
+  
+  list(
+    shapes      = shape_list,
+    annotations = annot_list
+  )
+}
+
+
+
+
+
 
 metrics      <- box_vars_df$var_selection
 metric_names <- box_vars_df$var_descr
 
-# jittered strip plots
-#----------------------------------------------------
+# 1) Build strip (box) traces
 p_strip <- plot_ly()
 
 for (i in seq_along(metrics)) {
-  var_nm  <- metrics[i]       
-  var_lab <- metric_names[i]  
+  var_nm  <- metrics[i]
+  var_lab <- metric_names[i]
   
-  # Vectors for x, y, and tooltip text
   y_vals  <- score_table[[var_nm]]
   x_vals  <- rep(var_lab, length(y_vals))
-  ic_vals    <- score_table[["Indicator.Code"]]
-  hover_text <- paste0(
-    "Indicator: ", ic_vals, "<br>",
-    var_lab, ": ", round(y_vals, 1))
+  ic_vals <- score_table[["Indicator.Code"]]
   
-  p_strip <- p_strip |> 
+  hover_text <- paste0(
+    "Indicator name: ", ic_vals, "<br>",
+    var_lab, ": ", round(y_vals, 1)
+  )
+  
+  p_strip <- p_strip %>%
     add_trace(
       type      = "box",
       x         = x_vals,
       y         = y_vals,
       name      = var_lab,
-      boxpoints = "all",                     
-      pointpos  = 0,                         
-      jitter    = 0.4,                       
-      fillcolor = "rgba(255,255,255,0)",     
+      boxpoints = "all",
+      pointpos  = 0,
+      jitter    = 0.4,
+      fillcolor = "rgba(255,255,255,0)",
       line      = list(color="rgba(255,255,255,0)"),
       marker    = list(opacity = 0.6),
-      text      = hover_text,        # custom tooltip
-      hoverinfo = "text")
+      text      = hover_text,
+      hoverinfo = "text", 
+      showlegend = FALSE)
 }
 
-#  Fix x-axis as categorical in a known order
-#----------------------------------------------------
-x_layout <- list(type          = "category",
-                 categoryorder = "array",
-                 categoryarray = metric_names)
+# 2) X-axis as categorical
+x_layout <- list(
+  type          = "category",
+  categoryorder = "array",
+  categoryarray = metric_names)
 
-
-#  Function for shapes + annotations
-#----------------------------------------------------
-
-make_indicator_artifacts <- function(ind_code, 
-                                     row_i, 
-                                     metrics, 
-                                     metric_names) {
-  
-  n_metrics  <- length(metrics)
-  shape_list <- vector("list", n_metrics)
-  annot_list <- vector("list", n_metrics)
-  
-  for (idx in seq_len(n_metrics)) {
-    
-    val <- row_i[[ metrics[idx] ]]
-    if (!is.na(val) && !is.null(val)) {
-      
-      x_center <- (idx - 1) 
-      x0       <- x_center - 0.25
-      x1       <- x_center + 0.25
-      
-      # 1) Red horizontal line
-      shape_list[[idx]] <- 
-        list(type = "line",
-             xref = "x",
-             yref = "y",
-             x0   = x0,
-             x1   = x1,
-             y0   = val,
-             y1   = val,
-             line = list(color = "red", 
-                         width = 2))
-      
-      # 2) ind text and value
-      text_lab <- paste0(ind_code, 
-                         ": ", 
-                         round(val, 1))
-      
-      annot_list[[idx]] <- 
-        list(x         = x1 + 0.05,
-             y         = val,
-             xref      = "x",
-             yref      = "y",
-             text      = text_lab,
-             xanchor   = "left",
-             yanchor   = "middle",
-             showarrow = FALSE,
-             font      = list(color = "red"),
-             yshift    = 0)
-    }
-  }
-  
-  shape_list <- shape_list[!sapply(shape_list, is.null)]
-  annot_list <- annot_list[!sapply(shape_list, is.null)]
-  
-  list(shapes      = shape_list,
-       annotations = annot_list)
-}
-
-
-#  dropdown interactivity
-#----------------------------------------------------
+# 3) Build the dropdown
 indicators <- unique(score_table$Indicator.Code)
 
-buttons <- lapply(indicators, 
-                  function(ind) {
-  row_i <- score_table |> 
-    filter(Indicator.Code == ind) |> 
+buttons <- lapply(indicators, function(ind) {
+  row_i <- score_table %>%
+    filter(Indicator.Code == ind) %>%
     slice(1)
   
-  artifacts <- make_indicator_artifacts(ind, 
-                                        row_i, 
-                                        metrics, 
-                                        metric_names)
+  indname <- row_i$Indicator.Name
+  
+  artifacts <- make_indicator_artifacts(ind_code     = ind,
+                                        ind_name     = indname,
+                                        row_i        = row_i, 
+                                        metrics      = metrics, 
+                                        metric_names = metric_names)
   shape_list <- artifacts$shapes
   annot_list <- artifacts$annotations
   
-  list(label  = ind,
-       method = "relayout",
-       args   = list(list(shapes      = shape_list,
-                          annotations = annot_list)))
+  list(
+    label  = ind,
+    method = "relayout",
+    args   = list(list(
+      shapes      = shape_list,
+      annotations = annot_list
+    ))
+  )
 })
 
-# Optional "None" button
 none_button <- list(
   label  = "None",
   method = "relayout",
-  args   = list(list(shapes      = list(), 
-                     annotations = list())))
+  args   = list(list(
+    shapes      = list(),
+    annotations = list()
+  ))
+)
 
-updatemenus <-
-  list(list(type    = "dropdown",
-            active  = 0,
-            buttons = c(list(none_button), 
-                        buttons)))
-p_strip <- 
-  p_strip |> 
+updatemenus <- list(
+  list(
+    type   = "dropdown",
+    active = 0,
+    buttons = c(list(none_button), buttons)
+  )
+)
+
+# 4) Final layout
+p_strip <- p_strip %>%
   layout(
     title       = "Percentage of each category covered per indicator",
     xaxis       = x_layout,
@@ -541,11 +918,20 @@ p_strip <-
     boxmode     = "overlay",
     shapes      = list(),
     annotations = list(),
-    updatemenus = updatemenus)
+    updatemenus = updatemenus, 
+    showlegend = FALSE)
 
-# return
-#----------------------------------------------------
 p_strip
+
+
+
+
+
+
+
+
+
+
 ```
 
 
