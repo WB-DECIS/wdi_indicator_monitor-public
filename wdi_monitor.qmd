@@ -51,7 +51,9 @@ score_table     <- mutate(score_table,
 ```{r}
 #| label: set-inputs
 
-time_period <- paste(lubridate::month(Sys.Date(), label=TRUE), lubridate::year(Sys.Date()))
+time_period <- paste(lubridate::month(Sys.Date(), 
+                                      label=TRUE), 
+                     lubridate::year(Sys.Date()))
 
 #extract number of indicators
 n_indicators <- monitoring_data %>% 
@@ -332,19 +334,19 @@ box_vars_df <- var_df %>%
     # A small table to align label-value pairs
     htmltools::tags$table(
       style = "width:100%; border-collapse: collapse;",
-      # Row 1: "Total economies" + n_countries
+      # Row 1
       htmltools::tags$tr(
         htmltools::tags$td("Total number of economies:", 
                            style = "padding: 5px;"),
         htmltools::tags$td(n_countries,       
                            style = "padding: 5px; text-align: right;")),
-      # Row 2: "Median economies per ind." + med_n_country
+      # Row 2
       htmltools::tags$tr(
         htmltools::tags$td("Median number of economies:", 
                            style="padding: 5px;"),
         htmltools::tags$td(med_n_country,                 
                            style = "padding: 5px; text-align: right;")),
-      # Row 3: "Median % of LMICs" + med_p_lmics
+      # Row 3
       htmltools::tags$tr(
         htmltools::tags$td("Median % of LMICs:", 
                            style="padding: 5px;"),
@@ -369,19 +371,19 @@ box_vars_df <- var_df %>%
     # Another table for these stats
     htmltools::tags$table(
       style = "width:100%; border-collapse: collapse;",
-      # Row 1: "Overall number of years" + n_years
+      # Row 1
       htmltools::tags$tr(
         htmltools::tags$td("Total number of years:", 
                            style = "padding: 5px;"),
         htmltools::tags$td(n_years,                   
                            style = "padding: 5px; text-align: right;")),
-      # Row 2: "Median year span" + med_yr_span
+      # Row 2
       htmltools::tags$tr(
         htmltools::tags$td("Median year span:", 
                            style = "padding: 5px;"),
         htmltools::tags$td(med_yr_span,         
                            style = "padding: 5px; text-align: right;")),
-      # Row 3: "Median latest year" + med_latest_year
+      # Row 3
       htmltools::tags$tr(
         htmltools::tags$td("Median latest year:", 
                            style = "padding: 5px;"),
@@ -734,7 +736,6 @@ box_vars_df <- var_df %>%
 
 make_indicator_artifacts <- function(ind_code, ind_name, row_i, metrics, metric_names) {
   
-  # 'row_i' is a 1-row df containing columns: Indicator.Code, Indicator.Name, plus your 4 metrics
   n_metrics  <- length(metrics)
   shape_list <- vector("list", n_metrics)
   annot_list <- vector("list", n_metrics)
@@ -771,8 +772,7 @@ make_indicator_artifacts <- function(ind_code, ind_name, row_i, metrics, metric_
         xanchor   = "left",
         yanchor   = "middle",
         showarrow = FALSE,
-        font      = list(color = "red")
-      )
+        font      = list(color = "red"))
     }
   }
   
@@ -792,13 +792,13 @@ make_indicator_artifacts <- function(ind_code, ind_name, row_i, metrics, metric_
   annot_list[[n_metrics + 1]] <- bottom_left_annot
   
   # Remove NULL entries
-  shape_list <- shape_list[!sapply(shape_list, is.null)]
-  annot_list <- annot_list[!sapply(annot_list, is.null)]
+  shape_list <- shape_list[!sapply(shape_list, 
+                                   is.null)]
+  annot_list <- annot_list[!sapply(annot_list, 
+                                   is.null)]
   
-  list(
-    shapes      = shape_list,
-    annotations = annot_list
-  )
+  list(shapes      = shape_list,
+       annotations = annot_list)
 }
 
 
@@ -820,10 +820,8 @@ for (i in seq_along(metrics)) {
   x_vals  <- rep(var_lab, length(y_vals))
   ic_vals <- score_table[["Indicator.Code"]]
   
-  hover_text <- paste0(
-    "Indicator: ", ic_vals, "<br>",
-    var_lab, ": ", round(y_vals, 1)
-  )
+  hover_text <- paste0("Indicator: ", ic_vals, "<br>",
+                       var_lab, ": ", round(y_vals, 1))
   
   p_strip <- p_strip %>%
     add_trace(
@@ -871,9 +869,7 @@ buttons <- lapply(indicators, function(ind) {
     method = "relayout",
     args   = list(list(
       shapes      = shape_list,
-      annotations = annot_list
-    ))
-  )
+      annotations = annot_list)))
 })
 
 none_button <- list(
@@ -881,17 +877,14 @@ none_button <- list(
   method = "relayout",
   args   = list(list(
     shapes      = list(),
-    annotations = list()
-  ))
-)
+    annotations = list())))
 
 updatemenus <- list(
   list(
-    type   = "dropdown",
-    active = 0,
-    buttons = c(list(none_button), buttons)
-  )
-)
+    type    = "dropdown",
+    active  = 0,
+    buttons = c(list(none_button), 
+                buttons)))
 
 # 4) Final layout
 p_strip <- p_strip %>%
@@ -903,17 +896,9 @@ p_strip <- p_strip %>%
     shapes      = list(),
     annotations = list(),
     updatemenus = updatemenus, 
-    showlegend = FALSE)
+    showlegend  = FALSE)
 
 p_strip
-
-
-
-
-
-
-
-
 
 
 ```
