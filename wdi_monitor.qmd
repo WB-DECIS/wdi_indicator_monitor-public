@@ -593,7 +593,7 @@ To display only the indicators with poor economy coverage (under 50 economies), 
 ctr_table <- select(score_table, 
                     Indicator.Code, 
                     Indicator.Name, 
-                    geographic_score_hybrid, 
+                    #geographic_score_hybrid, 
                     n_country, 
                     n_lmic,
                     p_lmic, 
@@ -619,35 +619,32 @@ filter_fct_ctr <- function(values, name) {
 filter_range_ctr <- function(values, name) {
   oninput <- sprintf("Reactable.setFilter('ctr-tbl', '%s', this.value)", name)
   tags$input(
-    type = "range",
-    min = floor(min(values, na.rm = TRUE)),  # Handle NA values
-    max = ceiling(max(values, na.rm = TRUE)),  # Handle NA values
-    value = floor(min(values, na.rm = TRUE)),
-    oninput = oninput,
-    onchange = oninput,
+    type         = "range",
+    min          = floor(min(values, na.rm = TRUE)),  # Handle NA values
+    max          = ceiling(max(values, na.rm = TRUE)),  # Handle NA values
+    value        = floor(min(values, na.rm = TRUE)),
+    oninput      = oninput,
+    onchange     = oninput,
     "aria-label" = sprintf("Filter by minimum %s", name),
-    style = "width: 100%;"
-  )
+    style        = "width: 100%;")
 }
 
 checkbox_filter_ctr <- function(name) {
   tags$label(
     style = "display: block; margin-bottom: 10px;",
     tags$input(
-      type = "checkbox",
-      id = paste0(name, "-checkbox"),
+      type     = "checkbox",
+      id       = paste0(name, "-checkbox"),
       onchange = glue::glue(
         "Reactable.setFilter(
           'ctr-tbl',
           '{name}',
           this.checked ? 'filter' : undefined
-        )"
-      ),
-      style = "margin-right: 5px;"
+        )"),
+      style     = "margin-right: 5px;"
     ),
     "Only show indicators with fewer than 50 countries")
 }
-
 
 
 reactable(
@@ -662,11 +659,11 @@ reactable(
   columns = list(
     Indicator.Code = colDef(name = "Code"),
     Indicator.Name = colDef(name = "Name"),
-    n_lmic  = colDef(name = "Number of LMICs"),
-    p_lmic  = colDef(name = "Percent of LMICs"),
-    n_country = colDef(
-      name       = "Number of Economies",
-      filterable = TRUE,
+    n_lmic         = colDef(name = "Number of LMICs"),
+    p_lmic         = colDef(name = "Percent of LMICs"),
+    n_country      = colDef(
+      name         = "Number of Economies",
+      filterable   = TRUE,
       filterMethod = JS("
         function(rows, columnId, value) {
           if (value === 'filter') {
@@ -680,34 +677,11 @@ reactable(
       "),
       filterInput = checkbox_filter_ctr("n_country")
     ),
-    datatopic = colDef(
-      name        = "Topic",
-      filterInput = filter_fct_ctr
-    ),
-    geographic_score_hybrid = colDef(
-      name        = "Geographical Coverage Score",
-      filterable  = TRUE,
-      filterMethod = JS("
-        function(rows, columnId, filterValue) {
-          return rows.filter(function(row) {
-            return row.values[columnId] != null && row.values[columnId] >= filterValue;
-          });
-        }
-      "),
-      filterInput = filter_range_ctr,
-      style = function(value) {
-        if (is.na(value)) {
-          NULL  
-        } else if (value < 2) {
-          list(background = danger, color = "white")  # Warning color
-        } else {
-          NULL
-        }
-      }
-    )
-  ),
+    datatopic     = colDef(
+      name          = "Topic",
+      filterInput   = filter_fct_ctr)),
   defaultPageSize = 10,
-  elementId = "ctr-tbl"
+  elementId       = "ctr-tbl"
 )
 ```
 
@@ -721,7 +695,15 @@ To display only the indicators with no data in the last 10 years, select the che
 ```{r}
 #| title: Time Coverage Table
 
-time_table <- select(score_table, Indicator.Code, Indicator.Name, temporal_score_hybrid, yearlatest, yearlatest_median, span_years, nonmiss, datatopic) %>%
+time_table <- select(score_table, 
+                     Indicator.Code, 
+                     Indicator.Name, 
+                     #temporal_score_hybrid, 
+                     yearlatest, 
+                     yearlatest_median, 
+                     span_years,
+                     nonmiss, 
+                     datatopic) %>%
       arrange(desc(yearlatest))
 
 # Function for select input filter
@@ -743,15 +725,14 @@ filter_fct_time <- function(values, name) {
 filter_range_time <- function(values, name) {
   oninput <- sprintf("Reactable.setFilter('time-tbl', '%s', this.value)", name)
   tags$input(
-    type = "range",
-    min = floor(min(values, na.rm = TRUE)),  # Handle NA values
-    max = ceiling(max(values, na.rm = TRUE)),  # Handle NA values
-    value = floor(min(values, na.rm = TRUE)),
-    oninput = oninput,
-    onchange = oninput,
+    type         = "range",
+    min          = floor(min(values, na.rm = TRUE)),  # Handle NA values
+    max          = ceiling(max(values, na.rm = TRUE)),  # Handle NA values
+    value        = floor(min(values, na.rm = TRUE)),
+    oninput      = oninput,
+    onchange     = oninput,
     "aria-label" = sprintf("Filter by minimum %s", name),
-    style = "width: 100%;"
-  )
+    style        = "width: 100%;")
 }
 
 # Define checkbox filter for time
@@ -759,8 +740,8 @@ checkbox_filter_time <- function(name) {
   tags$label(
     style = "display: block; margin-bottom: 10px;",
     tags$input(
-      type = "checkbox",
-      id = paste0(name, "-checkbox"),
+      type     = "checkbox",
+      id       = paste0(name, "-checkbox"),
       onchange = glue::glue(
         "Reactable.setFilter(
           'time-tbl',
@@ -768,8 +749,7 @@ checkbox_filter_time <- function(name) {
           this.checked ? 'filter' : undefined
         )"
       ),
-      style = "margin-right: 5px;"
-    ),
+      style    = "margin-right: 5px;"),
     "Only show indicators with no data in the last 10 years"
   )
 }
@@ -780,9 +760,9 @@ reactable(
   columns = list(
     Indicator.Code = colDef(name = "Code"),
     Indicator.Name = colDef(name = "Name"),
-    yearlatest = colDef(
-      name = "Latest Year",
-      filterable = TRUE,
+    yearlatest     = colDef(
+      name         = "Latest Year",
+      filterable   = TRUE,
       filterMethod = JS("
         function(rows, columnId, value) {
           if (value === 'filter') {
@@ -795,39 +775,16 @@ reactable(
           }
         }
       "),
-      filterInput = checkbox_filter_time("yearlatest")
+      filterInput  = checkbox_filter_time("yearlatest")
     ),
     yearlatest_median = colDef(name = "Median Latest Year"),
-    span_years = colDef(name = "Span of Years"),
-    nonmiss = colDef(name = "Share of Non-missing Data"),
-    datatopic = colDef(
-      name = "Topic",
-      filterInput = filter_fct_time
-    ),
-    temporal_score_hybrid = colDef(
-      name = "Temporal Coverage Score",
-      filterable = TRUE,
-      filterMethod = JS("
-        function(rows, columnId, filterValue) {
-          return rows.filter(function(row) {
-            return row.values[columnId] != null && row.values[columnId] >= filterValue;
-          });
-        }
-      "),
-      filterInput = filter_range_time,
-      style = function(value) {
-        if (is.na(value)) {
-          NULL  
-        } else if (value < 2) {
-          list(background = danger, color = "white")  # Warning color
-        } else {
-          NULL
-        }
-      }
-    )
-  ),
-  defaultPageSize = 10,
-  elementId = "time-tbl"
+    span_years        = colDef(name = "Span of Years"),
+    nonmiss           = colDef(name = "Share of Non-missing Data"),
+    datatopic         = colDef(
+      name        = "Topic",
+      filterInput = filter_fct_time)),
+  defaultPageSize     = 10,
+  elementId           = "time-tbl"
 )
 ```
 
