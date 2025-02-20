@@ -88,7 +88,7 @@ dataversion <- paste0("[",
 
 |                  |                                         |
 |------------------|-----------------------------------------|
-| **Database**     | `{r} params$database`                   |
+| **Database**     | `{r} params$database`  [(WDI)](https://datatopics.worldbank.org/world-development-indicators/)                 |
 | **Unit**         | `{r} params$unit`                       |
 | **Month**        | `{r} time_period`                       | 
 | **Indicators**   | `{r} scales::comma(n_indicators)`       |
