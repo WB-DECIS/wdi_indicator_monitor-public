@@ -72,7 +72,7 @@ score_table <-
   mutate(p_country    = n_country/n_countries, 
          p_country    = p_country*100, 
          p_span_years = 100*span_years/max(span_years))
-dataversion <- "January 2025"
+dataversion <- "Jan 2025"
 dataurl     <- "https://datatopics.worldbank.org/world-development-indicators/release-note/jan-2025.html"
 dataversion <- paste0("[", 
                       dataversion, 
@@ -93,7 +93,7 @@ dataversion <- paste0("[",
 | **Month**        | `{r} time_period`                       | 
 | **Indicators**   | `{r} scales::comma(n_indicators)`       |
 | **Years**        | `{r} paste0(min_year, " - ", max_year)` |
-| **WDI version**  | [January 2025](https://datatopics.worldbank.org/world-development-indicators/release-note/jan-2025.html)                      |
+| **WDI version**  | [Jan 2025](https://datatopics.worldbank.org/world-development-indicators/release-note/jan-2025.html)                      |
 
 <!-- <h3> Download the Data </h3> -->
 
