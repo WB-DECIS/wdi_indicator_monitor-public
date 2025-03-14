@@ -594,7 +594,7 @@ score_table |>
 
 The number of economies for which data is available is a key metric to understand the geographical coverage of the indicator.
 
-To display only the indicators with poor economy coverage (under 50 economies), select the checkbox under the **'Number of Economies'** column.
+To display only the indicators with low economy coverage (under 50 economies), select the checkbox under the **'Number of Economies'** column.
 
 
 ```{r}
@@ -653,7 +653,7 @@ checkbox_filter_ctr <- function(name) {
         )"),
       style     = "margin-right: 5px;"
     ),
-    "Only show indicators with fewer than 50 countries")
+    "Only show indicators with fewer than 50 economies")
 }
 
 
