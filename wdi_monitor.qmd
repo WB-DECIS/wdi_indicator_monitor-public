@@ -117,466 +117,476 @@ score_table |>
     icon             = "fa fa-save")
 ```
 
-# Overview
-
-```{r}
-#| label: all-values
-#| results: hide
-
-#metadata count
-#count number of indicators failing on metadata
-metadata_count <- score_table %>% 
-  filter(metadata_fail != "No missing metadata") %>% 
-  nrow()
-
-#license count
-#count number of indicators failing on license
-license_count <- score_table %>% 
-  filter(License.Type != "CC BY-4.0"|is.na(License.Type)) %>% 
-  nrow()
-
-# low user count
-#count number of indicators failing on user metrics
-user_count <- score_table %>% 
-  filter(visitors < 50) %>% 
-  nrow()
-
-# economy count
-#count number of indicators failing on economy coverage
-economy_count <- score_table %>% 
-  filter(n_country < 50) %>% 
-  nrow()
-
-#time count
-#count number of indicators failing on time coverage
-time_count <- score_table %>% 
-  filter(yearlatest < (lubridate::year(Sys.Date())-10)) %>% 
-  nrow()
-
-#set thresholds for color scoring of indicator counts
-# 0 indicators is blue
-# 0-100 indicators is yellow
-# more than 100 indicators is red
-warning <- "#A79011"
-danger  <- "#CA8181"
-light   <- "#7B98AD"
-
-# Prep data for tiles
-plmics <- score_table |> 
-  group_by(Topic) |> 
-  summarise(m = median(p_lmic)) |> 
-  select(m) |> 
-  _[]$m |> 
-  mean(na.rm = T) |> 
-  round(1)
-lyr <- score_table |> 
-  group_by(Topic) |> 
-  summarise(m = median(yearlatest)) |> 
-  select(m) |> 
-  _[]$m |> 
-  mean(na.rm = T) |> 
-  round(1)
-syr <- score_table |> 
-  group_by(Topic) |> 
-  summarise(m = median(span_years)) |> 
-  select(m) |> 
-  _[]$m |> 
-  mean(na.rm = T) |> 
-  round(1)
-nctry <- score_table |> 
-  group_by(Topic) |> 
-  summarise(m = median(n_country)) |> 
-  select(m) |> 
-  _[]$m |> 
-  mean(na.rm = T) |> 
-  round(1)
-
-# New tile stats------------------
-med_n_country <- 
-  median(score_table$n_country)
-med_p_lmics <- 
-  paste0(median(score_table$p_lmic), 
-         "%")
-med_yr_span <- 
-  median(score_table$span_years)
-med_latest_year <- 
-  median(score_table$yearlatest)
 
 
 
+<!-- # Overview -->
 
+<!-- ```{r} -->
+<!-- #| label: all-values -->
+<!-- #| results: hide -->
 
-# prep tile colours
-plmics_color <- case_when(
-  between(plmics, 0, 100) ~ warning,
-  plmics > 100 ~ danger,
-  .default = light
-  )
+<!-- #metadata count -->
+<!-- #count number of indicators failing on metadata -->
+<!-- metadata_count <- score_table %>%  -->
+<!--   filter(metadata_fail != "No missing metadata") %>%  -->
+<!--   nrow() -->
 
-lyr_color <- case_when(
-  between(lyr, 0, 100) ~ warning,
-  lyr > 100 ~ danger,
-  .default = light
-  )
+<!-- #license count -->
+<!-- #count number of indicators failing on license -->
+<!-- license_count <- score_table %>%  -->
+<!--   filter(License.Type != "CC BY-4.0"|is.na(License.Type)) %>%  -->
+<!--   nrow() -->
 
-syr_color <- case_when(
-  between(syr, 0, 100) ~ warning,
-  syr > 100 ~ danger,
-  .default = light
-  )
+<!-- # low user count -->
+<!-- #count number of indicators failing on user metrics -->
+<!-- user_count <- score_table %>%  -->
+<!--   filter(visitors < 50) %>%  -->
+<!--   nrow() -->
 
-nctry_color <- case_when(
-  between(nctry, 0, 100) ~ warning,
-  nctry > 100 ~ danger,
-  .default = light
-  )
-plmics_color <- light
-lyr_color    <- light
-syr_color    <- light
-nctry_color  <- light
+<!-- # economy count -->
+<!-- #count number of indicators failing on economy coverage -->
+<!-- economy_count <- score_table %>%  -->
+<!--   filter(n_country < 50) %>%  -->
+<!--   nrow() -->
 
-### Summary card style 
-card_style   <- "text-decoration: none; color: inherit;"
-icon_style   <- "display: block; margin-top:20px;  text-align: center"
-card_p_style <- "font-size: 18px;font-color: #ffffff; margin-top: 10px;text-align: left;line-height: 1.2;"
-card_b_style <- "font-size: 2.5rem; font-color: #ffffff; margin: 0; text-align: left;font-weight: normal;"
+<!-- #time count -->
+<!-- #count number of indicators failing on time coverage -->
+<!-- time_count <- score_table %>%  -->
+<!--   filter(yearlatest < (lubridate::year(Sys.Date())-10)) %>%  -->
+<!--   nrow() -->
 
-```
+<!-- #set thresholds for color scoring of indicator counts -->
+<!-- # 0 indicators is blue -->
+<!-- # 0-100 indicators is yellow -->
+<!-- # more than 100 indicators is red -->
+<!-- warning <- "#A79011" -->
+<!-- danger  <- "#CA8181" -->
+<!-- light   <- "#7B98AD" -->
 
-```{r globals, include=FALSE}
-# Vector of eligible columns
+<!-- # Prep data for tiles -->
+<!-- plmics <- score_table |>  -->
+<!--   group_by(Topic) |>  -->
+<!--   summarise(m = median(p_lmic)) |>  -->
+<!--   select(m) |>  -->
+<!--   _[]$m |>  -->
+<!--   mean(na.rm = T) |>  -->
+<!--   round(1) -->
+<!-- lyr <- score_table |>  -->
+<!--   group_by(Topic) |>  -->
+<!--   summarise(m = median(yearlatest)) |>  -->
+<!--   select(m) |>  -->
+<!--   _[]$m |>  -->
+<!--   mean(na.rm = T) |>  -->
+<!--   round(1) -->
+<!-- syr <- score_table |>  -->
+<!--   group_by(Topic) |>  -->
+<!--   summarise(m = median(span_years)) |>  -->
+<!--   select(m) |>  -->
+<!--   _[]$m |>  -->
+<!--   mean(na.rm = T) |>  -->
+<!--   round(1) -->
+<!-- nctry <- score_table |>  -->
+<!--   group_by(Topic) |>  -->
+<!--   summarise(m = median(n_country)) |>  -->
+<!--   select(m) |>  -->
+<!--   _[]$m |>  -->
+<!--   mean(na.rm = T) |>  -->
+<!--   round(1) -->
 
-# # Store all eligible columns (including 'yearfirst') in a vector
-var_selection <- 
-  c("yearfirst", 
-    "total_obs", 
-    "n_years", 
-    "countryobs_avg",
-    "countryobs_max",
-    "n_country",
-    "p_country",
-    
-    "yearlatest_mean", 
-    "yearlatest_median",
-    "yearlatest", 
-    
-    "yearfirst_mean",
-    "yearfirst_median",
-    
-    "yearmean_mean",
-    "yearmean_median",
-    
-    "n_lmic", 
-    "p_lmic",
-    
-    "span_years",
-    "p_span_years",
-    "cov_years", 
-    
-    "nonmiss", 
-    "nonmiss_tot", 
-    "nonmiss_tot2000")
-
-var_descr <- 
-  c("First year", 
-    "Total obs.", 
-    "Number of years", 
-    "Avg. economy obs.", 
-    "Max. economy obs.", 
-    "Number of economies",
-    "Economies",
-    
-    "Mean of latest year", 
-    "Med. of latest year", 
-    "Latest year", 
-    
-    "Mean of first year", 
-    "Med. of first year", 
-    
-    "Mean of mean year", 
-    "Med. of mean year", 
-    
-    "Number of LMICs", 
-    "LMICs", 
-    
-    "Year span", 
-    paste0("Year span, total ", max(score_table$span_years)),
-    "Year coverage", 
-    
-    "Non-missing", 
-    "Non-missing, total", 
-    "Non-missing, total since 2000")
-
-var_df <- 
-  data.frame(var_selection = var_selection, 
-             var_descr     = var_descr)
-box_vars_df <- var_df %>%
-  filter(var_selection %in% c("p_lmic", 
-                              #"yearlatest", 
-                              "p_span_years", 
-                              "p_country"))
-  
-
-
-```
-
-
-## Row {height=20%}
-
-```{r}
-
- # ====================== Tile 1: Geographic Coverage ======================
-  htmltools::div(
-    class = "custom-card",
-    style = "
-      background-color: #f8f9fa; 
-      color: #333;
-      width: 100%;
-      padding: 20px;
-      border-radius: 5px;
-    ",
-    # Centered header
-    htmltools::h3("Geographic coverage", 
-                  style = "text-align: center; margin-top: 0;"),
-    
-    # A small table to align label-value pairs
-    htmltools::tags$table(
-      style = "width:100%; border-collapse: collapse;",
-      # Row 1
-      htmltools::tags$tr(
-        htmltools::tags$td("Total number of economies:", 
-                           style = "padding: 5px;"),
-        htmltools::tags$td(n_countries,       
-                           style = "padding: 5px; text-align: right;")),
-      # Row 2
-      htmltools::tags$tr(
-        htmltools::tags$td("Median number of economies:", 
-                           style="padding: 5px;"),
-        htmltools::tags$td(med_n_country,                 
-                           style = "padding: 5px; text-align: right;")),
-      # Row 3
-      htmltools::tags$tr(
-        htmltools::tags$td("Median % of LMICs:", 
-                           style="padding: 5px;"),
-        htmltools::tags$td(med_p_lmics,          
-                           style = "padding: 5px; text-align: right;"))))
-```
-
-
-```{r}
- # ====================== Tile 2: Time Coverage ======================
-  htmltools::div(
-    class = "custom-card",
-    style = "
-      background-color: #f8f9fa; 
-      color: #333;
-      width: 100%;
-      padding: 20px;
-      border-radius: 5px;
-    ",
-    # Centered header
-    htmltools::h3("Time coverage", style="text-align: center; margin-top: 0;"),
-    # Another table for these stats
-    htmltools::tags$table(
-      style = "width:100%; border-collapse: collapse;",
-      # Row 1
-      htmltools::tags$tr(
-        htmltools::tags$td("Total number of years:", 
-                           style = "padding: 5px;"),
-        htmltools::tags$td(n_years,                   
-                           style = "padding: 5px; text-align: right;")),
-      # Row 2
-      htmltools::tags$tr(
-        htmltools::tags$td("Median year span:", 
-                           style = "padding: 5px;"),
-        htmltools::tags$td(med_yr_span,         
-                           style = "padding: 5px; text-align: right;")),
-      # Row 3
-      htmltools::tags$tr(
-        htmltools::tags$td("Median latest year:", 
-                           style = "padding: 5px;"),
-        htmltools::tags$td(med_latest_year,       
-                           style = "padding: 5px; text-align: right;"))))
-```
-
-
-
-## Row {height=600}
-
-```{r jitter-strip-plot}
-
-make_indicator_artifacts <- function(ind_code, 
-                                     ind_name, 
-                                     row_i, 
-                                     metrics, 
-                                     metric_names) {
-  
-  n_metrics  <- length(metrics)
-  shape_list <- vector("list", n_metrics)
-  annot_list <- vector("list", n_metrics)
-  
-  # 1) Horizontal lines + numeric annotations
-  for (idx in seq_len(n_metrics)) {
-    val <- row_i[[ metrics[idx] ]]
-    if (!is.na(val) && !is.null(val)) {
-      
-      x_center <- (idx - 1)
-      x0       <- x_center - 0.25
-      x1       <- x_center + 0.25
-      
-      # (a) Red horizontal line
-      shape_list[[idx]] <- list(
-        type = "line",
-        xref = "x",
-        yref = "y",
-        x0   = x0,
-        x1   = x1,
-        y0   = val,
-        y1   = val,
-        line = list(color = "red", width = 2)
-      )
-      
-      # (b) Numeric value near the line
-      text_lab <- paste0(round(val, 1), "%")
-      annot_list[[idx]] <- list(
-        x         = x1 + 0.05,
-        y         = val,
-        xref      = "x",
-        yref      = "y",
-        text      = text_lab,
-        xanchor   = "left",
-        yanchor   = "middle",
-        showarrow = FALSE,
-        font      = list(color = "red"))
-    }
-  }
-  
-  bottom_left_annot <- list(
-    x = 0,
-    y = -0.08,
-    xref = "paper",
-    yref = "paper",
-    text = paste0("Highlighted indicator: ", ind_name),
-    xanchor = "left",
-    yanchor = "bottom",
-    showarrow = FALSE,
-    font = list(color = "black")
-  )
-  
-  # Add that to the annotation list if you want to keep it
-  annot_list[[n_metrics + 1]] <- bottom_left_annot
-  
-  # Remove NULL entries
-  shape_list <- shape_list[!sapply(shape_list, 
-                                   is.null)]
-  annot_list <- annot_list[!sapply(annot_list, 
-                                   is.null)]
-  
-  list(shapes      = shape_list,
-       annotations = annot_list)
-}
+<!-- # New tile stats------------------ -->
+<!-- med_n_country <-  -->
+<!--   median(score_table$n_country) -->
+<!-- med_p_lmics <-  -->
+<!--   paste0(median(score_table$p_lmic),  -->
+<!--          "%") -->
+<!-- med_yr_span <-  -->
+<!--   median(score_table$span_years) -->
+<!-- med_latest_year <-  -->
+<!--   median(score_table$yearlatest) -->
 
 
 
 
 
+<!-- # prep tile colours -->
+<!-- plmics_color <- case_when( -->
+<!--   between(plmics, 0, 100) ~ warning, -->
+<!--   plmics > 100 ~ danger, -->
+<!--   .default = light -->
+<!--   ) -->
 
-metrics      <- box_vars_df$var_selection
-metric_names <- box_vars_df$var_descr
+<!-- lyr_color <- case_when( -->
+<!--   between(lyr, 0, 100) ~ warning, -->
+<!--   lyr > 100 ~ danger, -->
+<!--   .default = light -->
+<!--   ) -->
 
-# 1) Build strip (box) traces
-p_strip <- plot_ly()
+<!-- syr_color <- case_when( -->
+<!--   between(syr, 0, 100) ~ warning, -->
+<!--   syr > 100 ~ danger, -->
+<!--   .default = light -->
+<!--   ) -->
 
-for (i in seq_along(metrics)) {
-  var_nm  <- metrics[i]
-  var_lab <- metric_names[i]
-  
-  y_vals  <- score_table[[var_nm]]
-  x_vals  <- rep(var_lab, length(y_vals))
-  ic_vals <- score_table[["Indicator.Code"]]
-  
-  hover_text <- paste0("Indicator: ", ic_vals, "<br>",
-                       var_lab, ": ", round(y_vals, 1))
-  
-  p_strip <- p_strip %>%
-    add_trace(
-      type      = "box",
-      x         = x_vals,
-      y         = y_vals,
-      name      = var_lab,
-      boxpoints = "all",
-      pointpos  = 0,
-      jitter    = 0.8,
-      fillcolor = "rgba(255,255,255,0)",
-      line      = list(color="rgba(255,255,255,0)"),
-      marker    = list(opacity = 0.6),
-      text      = hover_text,
-      hoverinfo = "text", 
-      showlegend = FALSE)
-}
+<!-- nctry_color <- case_when( -->
+<!--   between(nctry, 0, 100) ~ warning, -->
+<!--   nctry > 100 ~ danger, -->
+<!--   .default = light -->
+<!--   ) -->
+<!-- plmics_color <- light -->
+<!-- lyr_color    <- light -->
+<!-- syr_color    <- light -->
+<!-- nctry_color  <- light -->
 
-# 2) X-axis as categorical
-x_layout <- list(
-  type          = "category",
-  categoryorder = "array",
-  categoryarray = metric_names)
+<!-- ### Summary card style  -->
+<!-- card_style   <- "text-decoration: none; color: inherit;" -->
+<!-- icon_style   <- "display: block; margin-top:20px;  text-align: center" -->
+<!-- card_p_style <- "font-size: 18px;font-color: #ffffff; margin-top: 10px;text-align: left;line-height: 1.2;" -->
+<!-- card_b_style <- "font-size: 2.5rem; font-color: #ffffff; margin: 0; text-align: left;font-weight: normal;" -->
 
-# 3) Build the dropdown
-indicators <- unique(score_table$Indicator.Code)
+<!-- ``` -->
 
-buttons <- lapply(indicators, function(ind) {
-  row_i <- score_table %>%
-    filter(Indicator.Code == ind) %>%
-    slice(1)
-  
-  indname <- row_i$Indicator.Name
-  
-  artifacts <- make_indicator_artifacts(ind_code     = ind,
-                                        ind_name     = indname,
-                                        row_i        = row_i, 
-                                        metrics      = metrics, 
-                                        metric_names = metric_names)
-  shape_list <- artifacts$shapes
-  annot_list <- artifacts$annotations
-  
-  list(
-    label  = ind,
-    method = "relayout",
-    args   = list(list(
-      shapes      = shape_list,
-      annotations = annot_list)))
-})
+<!-- ```{r globals, include=FALSE} -->
+<!-- # Vector of eligible columns -->
 
-none_button <- list(
-  label  = "None",
-  method = "relayout",
-  args   = list(list(
-    shapes      = list(),
-    annotations = list())))
+<!-- # # Store all eligible columns (including 'yearfirst') in a vector -->
+<!-- var_selection <-  -->
+<!--   c("yearfirst",  -->
+<!--     "total_obs",  -->
+<!--     "n_years",  -->
+<!--     "countryobs_avg", -->
+<!--     "countryobs_max", -->
+<!--     "n_country", -->
+<!--     "p_country", -->
 
-updatemenus <- list(
-  list(
-    type    = "dropdown",
-    active  = 0,
-    buttons = c(list(none_button), 
-                buttons)))
+<!--     "yearlatest_mean",  -->
+<!--     "yearlatest_median", -->
+<!--     "yearlatest",  -->
 
-# 4) Final layout
-p_strip <- p_strip %>%
-  layout(
-    title       = "Percentage of each category covered per indicator",
-    xaxis       = x_layout,
-    yaxis       = list(title = "Percentage"),
-    boxmode     = "overlay",
-    shapes      = list(),
-    annotations = list(),
-    updatemenus = updatemenus, 
-    showlegend  = FALSE)
+<!--     "yearfirst_mean", -->
+<!--     "yearfirst_median", -->
 
-p_strip
+<!--     "yearmean_mean", -->
+<!--     "yearmean_median", -->
+
+<!--     "n_lmic",  -->
+<!--     "p_lmic", -->
+
+<!--     "span_years", -->
+<!--     "p_span_years", -->
+<!--     "cov_years",  -->
+
+<!--     "nonmiss",  -->
+<!--     "nonmiss_tot",  -->
+<!--     "nonmiss_tot2000") -->
+
+<!-- var_descr <-  -->
+<!--   c("First year",  -->
+<!--     "Total obs.",  -->
+<!--     "Number of years",  -->
+<!--     "Avg. economy obs.",  -->
+<!--     "Max. economy obs.",  -->
+<!--     "Number of economies", -->
+<!--     "Economies", -->
+
+<!--     "Mean of latest year",  -->
+<!--     "Med. of latest year",  -->
+<!--     "Latest year",  -->
+
+<!--     "Mean of first year",  -->
+<!--     "Med. of first year",  -->
+
+<!--     "Mean of mean year",  -->
+<!--     "Med. of mean year",  -->
+
+<!--     "Number of LMICs",  -->
+<!--     "LMICs",  -->
+
+<!--     "Year span",  -->
+<!--     paste0("Year span, total ", max(score_table$span_years)), -->
+<!--     "Year coverage",  -->
+
+<!--     "Non-missing",  -->
+<!--     "Non-missing, total",  -->
+<!--     "Non-missing, total since 2000") -->
+
+<!-- var_df <-  -->
+<!--   data.frame(var_selection = var_selection,  -->
+<!--              var_descr     = var_descr) -->
+<!-- box_vars_df <- var_df %>% -->
+<!--   filter(var_selection %in% c("p_lmic",  -->
+<!--                               #"yearlatest",  -->
+<!--                               "p_span_years",  -->
+<!--                               "p_country")) -->
 
 
-```
+
+<!-- ``` -->
+
+
+<!-- ## Row {height=20%} -->
+
+<!-- ```{r} -->
+
+<!--  # ====================== Tile 1: Geographic Coverage ====================== -->
+<!--   htmltools::div( -->
+<!--     class = "custom-card", -->
+<!--     style = " -->
+<!--       background-color: #f8f9fa;  -->
+<!--       color: #333; -->
+<!--       width: 100%; -->
+<!--       padding: 20px; -->
+<!--       border-radius: 5px; -->
+<!--     ", -->
+<!--     # Centered header -->
+<!--     htmltools::h3("Geographic coverage",  -->
+<!--                   style = "text-align: center; margin-top: 0;"), -->
+
+<!--     # A small table to align label-value pairs -->
+<!--     htmltools::tags$table( -->
+<!--       style = "width:100%; border-collapse: collapse;", -->
+<!--       # Row 1 -->
+<!--       htmltools::tags$tr( -->
+<!--         htmltools::tags$td("Total number of economies:",  -->
+<!--                            style = "padding: 5px;"), -->
+<!--         htmltools::tags$td(n_countries,        -->
+<!--                            style = "padding: 5px; text-align: right;")), -->
+<!--       # Row 2 -->
+<!--       htmltools::tags$tr( -->
+<!--         htmltools::tags$td("Median number of economies:",  -->
+<!--                            style="padding: 5px;"), -->
+<!--         htmltools::tags$td(med_n_country,                  -->
+<!--                            style = "padding: 5px; text-align: right;")), -->
+<!--       # Row 3 -->
+<!--       htmltools::tags$tr( -->
+<!--         htmltools::tags$td("Median % of LMICs:",  -->
+<!--                            style="padding: 5px;"), -->
+<!--         htmltools::tags$td(med_p_lmics,           -->
+<!--                            style = "padding: 5px; text-align: right;")))) -->
+<!-- ``` -->
+
+
+<!-- ```{r} -->
+<!--  # ====================== Tile 2: Time Coverage ====================== -->
+<!--   htmltools::div( -->
+<!--     class = "custom-card", -->
+<!--     style = " -->
+<!--       background-color: #f8f9fa;  -->
+<!--       color: #333; -->
+<!--       width: 100%; -->
+<!--       padding: 20px; -->
+<!--       border-radius: 5px; -->
+<!--     ", -->
+<!--     # Centered header -->
+<!--     htmltools::h3("Time coverage", style="text-align: center; margin-top: 0;"), -->
+<!--     # Another table for these stats -->
+<!--     htmltools::tags$table( -->
+<!--       style = "width:100%; border-collapse: collapse;", -->
+<!--       # Row 1 -->
+<!--       htmltools::tags$tr( -->
+<!--         htmltools::tags$td("Total number of years:",  -->
+<!--                            style = "padding: 5px;"), -->
+<!--         htmltools::tags$td(n_years,                    -->
+<!--                            style = "padding: 5px; text-align: right;")), -->
+<!--       # Row 2 -->
+<!--       htmltools::tags$tr( -->
+<!--         htmltools::tags$td("Median year span:",  -->
+<!--                            style = "padding: 5px;"), -->
+<!--         htmltools::tags$td(med_yr_span,          -->
+<!--                            style = "padding: 5px; text-align: right;")), -->
+<!--       # Row 3 -->
+<!--       htmltools::tags$tr( -->
+<!--         htmltools::tags$td("Median latest year:",  -->
+<!--                            style = "padding: 5px;"), -->
+<!--         htmltools::tags$td(med_latest_year,        -->
+<!--                            style = "padding: 5px; text-align: right;")))) -->
+<!-- ``` -->
+
+
+
+<!-- ## Row {height=600} -->
+
+<!-- ```{r jitter-strip-plot} -->
+
+<!-- make_indicator_artifacts <- function(ind_code,  -->
+<!--                                      ind_name,  -->
+<!--                                      row_i,  -->
+<!--                                      metrics,  -->
+<!--                                      metric_names) { -->
+
+<!--   n_metrics  <- length(metrics) -->
+<!--   shape_list <- vector("list", n_metrics) -->
+<!--   annot_list <- vector("list", n_metrics) -->
+
+<!--   # 1) Horizontal lines + numeric annotations -->
+<!--   for (idx in seq_len(n_metrics)) { -->
+<!--     val <- row_i[[ metrics[idx] ]] -->
+<!--     if (!is.na(val) && !is.null(val)) { -->
+
+<!--       x_center <- (idx - 1) -->
+<!--       x0       <- x_center - 0.25 -->
+<!--       x1       <- x_center + 0.25 -->
+
+<!--       # (a) Red horizontal line -->
+<!--       shape_list[[idx]] <- list( -->
+<!--         type = "line", -->
+<!--         xref = "x", -->
+<!--         yref = "y", -->
+<!--         x0   = x0, -->
+<!--         x1   = x1, -->
+<!--         y0   = val, -->
+<!--         y1   = val, -->
+<!--         line = list(color = "red", width = 2) -->
+<!--       ) -->
+
+<!--       # (b) Numeric value near the line -->
+<!--       text_lab <- paste0(round(val, 1), "%") -->
+<!--       annot_list[[idx]] <- list( -->
+<!--         x         = x1 + 0.05, -->
+<!--         y         = val, -->
+<!--         xref      = "x", -->
+<!--         yref      = "y", -->
+<!--         text      = text_lab, -->
+<!--         xanchor   = "left", -->
+<!--         yanchor   = "middle", -->
+<!--         showarrow = FALSE, -->
+<!--         font      = list(color = "red")) -->
+<!--     } -->
+<!--   } -->
+
+<!--   bottom_left_annot <- list( -->
+<!--     x = 0, -->
+<!--     y = -0.08, -->
+<!--     xref = "paper", -->
+<!--     yref = "paper", -->
+<!--     text = paste0("Highlighted indicator: ", ind_name), -->
+<!--     xanchor = "left", -->
+<!--     yanchor = "bottom", -->
+<!--     showarrow = FALSE, -->
+<!--     font = list(color = "black") -->
+<!--   ) -->
+
+<!--   # Add that to the annotation list if you want to keep it -->
+<!--   annot_list[[n_metrics + 1]] <- bottom_left_annot -->
+
+<!--   # Remove NULL entries -->
+<!--   shape_list <- shape_list[!sapply(shape_list,  -->
+<!--                                    is.null)] -->
+<!--   annot_list <- annot_list[!sapply(annot_list,  -->
+<!--                                    is.null)] -->
+
+<!--   list(shapes      = shape_list, -->
+<!--        annotations = annot_list) -->
+<!-- } -->
+
+
+
+
+
+
+<!-- metrics      <- box_vars_df$var_selection -->
+<!-- metric_names <- box_vars_df$var_descr -->
+
+<!-- # 1) Build strip (box) traces -->
+<!-- p_strip <- plot_ly() -->
+
+<!-- for (i in seq_along(metrics)) { -->
+<!--   var_nm  <- metrics[i] -->
+<!--   var_lab <- metric_names[i] -->
+
+<!--   y_vals  <- score_table[[var_nm]] -->
+<!--   x_vals  <- rep(var_lab, length(y_vals)) -->
+<!--   ic_vals <- score_table[["Indicator.Code"]] -->
+
+<!--   hover_text <- paste0("Indicator: ", ic_vals, "<br>", -->
+<!--                        var_lab, ": ", round(y_vals, 1)) -->
+
+<!--   p_strip <- p_strip %>% -->
+<!--     add_trace( -->
+<!--       type      = "box", -->
+<!--       x         = x_vals, -->
+<!--       y         = y_vals, -->
+<!--       name      = var_lab, -->
+<!--       boxpoints = "all", -->
+<!--       pointpos  = 0, -->
+<!--       jitter    = 0.8, -->
+<!--       fillcolor = "rgba(255,255,255,0)", -->
+<!--       line      = list(color="rgba(255,255,255,0)"), -->
+<!--       marker    = list(opacity = 0.6), -->
+<!--       text      = hover_text, -->
+<!--       hoverinfo = "text",  -->
+<!--       showlegend = FALSE) -->
+<!-- } -->
+
+<!-- # 2) X-axis as categorical -->
+<!-- x_layout <- list( -->
+<!--   type          = "category", -->
+<!--   categoryorder = "array", -->
+<!--   categoryarray = metric_names) -->
+
+<!-- # 3) Build the dropdown -->
+<!-- indicators <- unique(score_table$Indicator.Code) -->
+
+<!-- buttons <- lapply(indicators, function(ind) { -->
+<!--   row_i <- score_table %>% -->
+<!--     filter(Indicator.Code == ind) %>% -->
+<!--     slice(1) -->
+
+<!--   indname <- row_i$Indicator.Name -->
+
+<!--   artifacts <- make_indicator_artifacts(ind_code     = ind, -->
+<!--                                         ind_name     = indname, -->
+<!--                                         row_i        = row_i,  -->
+<!--                                         metrics      = metrics,  -->
+<!--                                         metric_names = metric_names) -->
+<!--   shape_list <- artifacts$shapes -->
+<!--   annot_list <- artifacts$annotations -->
+
+<!--   list( -->
+<!--     label  = ind, -->
+<!--     method = "relayout", -->
+<!--     args   = list(list( -->
+<!--       shapes      = shape_list, -->
+<!--       annotations = annot_list))) -->
+<!-- }) -->
+
+<!-- none_button <- list( -->
+<!--   label  = "None", -->
+<!--   method = "relayout", -->
+<!--   args   = list(list( -->
+<!--     shapes      = list(), -->
+<!--     annotations = list()))) -->
+
+<!-- updatemenus <- list( -->
+<!--   list( -->
+<!--     type    = "dropdown", -->
+<!--     active  = 0, -->
+<!--     buttons = c(list(none_button),  -->
+<!--                 buttons))) -->
+
+<!-- # 4) Final layout -->
+<!-- p_strip <- p_strip %>% -->
+<!--   layout( -->
+<!--     title       = "Percentage of each category covered per indicator", -->
+<!--     xaxis       = x_layout, -->
+<!--     yaxis       = list(title = "Percentage"), -->
+<!--     boxmode     = "overlay", -->
+<!--     shapes      = list(), -->
+<!--     annotations = list(), -->
+<!--     updatemenus = updatemenus,  -->
+<!--     showlegend  = FALSE) -->
+
+<!-- p_strip -->
+
+
+<!-- ``` -->
+
+
+
+
+
+
+
 
 
 
