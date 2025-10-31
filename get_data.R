@@ -5,6 +5,8 @@ library(lubridate)
 #devtools::install_github('randyzwitch/RSiteCatalyst')
 library(RSiteCatalyst)
 #read in password.R at here()
+here::i_am("get_data.R")
+
 source(here("password.R"))
 
 #### GET DATA ####
@@ -24,11 +26,10 @@ current_year <- year(current_date)
 
 url <- "https://databank.worldbank.org/data/download/WDI_CSV.zip"
 username <- Sys.info()["user"]
-
-destfile <- file.path(paste0("C:/Users/", username, "/Downloads/","wdi.zip"))
+destfile <- file.path(paste0("C:/Users/", username, "/Downloads/","wdi", current_date, ".zip"))
 download.file(url      = url, 
               destfile = destfile)
-usefile <- file.path(paste0("C:/Users/", username, "/Downloads/","WDI_CSV.zip"))
+usefile <- file.path(paste0("C:/Users/", username, "/Downloads/","wdi", current_date, ".zip"))
 #### CLEAN DATA ####
 #data <- read.table(unz(destfile, "WDICSV.csv"),header=T, quote="\"", sep=",")
 # topics <- read.table(unz(destfile, "WDISeries.csv"),header=T, quote="\"", sep=",") 
@@ -72,7 +73,7 @@ datal$Year <- as.numeric(as.character(datal$Year))
 
 # Merge relevant metadata
 countrymeta <- countrymeta %>%
-  rename("Country.Code" = "Country.Code") %>%
+  #rename("Country.Code" = "Country.Code") %>%
   select("Country.Code", 
          "Region", 
          "Income.Group", 
@@ -214,7 +215,6 @@ wdic <- merge(wdic, tmp, by = 'Indicator.Code')
 # Adobe analytics API login info
 SCAuth(adobe_user, adobe_password)
 
-
 # Get indicator list
 dat <- wdic %>%
   select("Indicator.Code")
@@ -256,7 +256,6 @@ wdiy <- merge(wdiy,
               seriesmeta, 
               by    = "Indicator.Code", 
               all.x = T)
-
 
 # flag if missing metadata info
 
@@ -305,16 +304,23 @@ indicators_metascore_df <- seriesmeta %>% #count number of words in each field
                                          sapply(strsplit(Short.definition, 
                                                          '\\W+'), 
                                                 length)) ,
-         Generalcomments_score = if_else(is.na(General.comments),
+         # 10/30/2025 - General notes all missing as now part of source metadata (see Other.notes)
+         # Generalcomments_score = if_else(is.na(General.comments),
+         #                                 as.integer(0),
+         #                                 sapply(strsplit(General.comments, 
+         #                                                 '\\W+'), 
+         #                                        length)) ,
+         OtherNotes_score = if_else(is.na(Other.notes),
                                          as.integer(0),
-                                         sapply(strsplit(General.comments, 
+                                         sapply(strsplit(Other.notes, 
                                                          '\\W+'), 
                                                 length)) ,
-         Notesfromoriginalsource_score = if_else(is.na(Notes.from.original.source),
-                                                 as.integer(0),
-                                                 sapply(strsplit(Notes.from.original.source, 
-                                                                 '\\W+'), 
-                                                        length)) ,
+         # 10/30/2025 - Notes from original source all missing as now part of source metadata (see Source)
+         # Notesfromoriginalsource_score = if_else(is.na(Notes.from.original.source),
+         #                                         as.integer(0),
+         #                                         sapply(strsplit(Notes.from.original.source, 
+         #                                                         '\\W+'), 
+         #                                                length)) ,
          #sum up the various metadata components
          metadata_length = Developmentrelevance_score + 
            Aggregationmethod_score + 
@@ -325,8 +331,9 @@ indicators_metascore_df <- seriesmeta %>% #count number of words in each field
            Source_score +
            Statisticalconceptandmethodology_score +
            Shortdefinition_score +
-           Generalcomments_score +
-           Notesfromoriginalsource_score,
+           #Generalcomments_score +
+           #Notesfromoriginalsource_score +
+           OtherNotes_score,
   ) %>%
   mutate(#produce score on any availability
     Developmentrelevance_min_score = if_else(Developmentrelevance_score > 0, 
@@ -372,7 +379,7 @@ indicators_metascore_short_df <- indicators_metascore_df %>%
 
 
 ### WDI Scoring of Indicators
-
+# Set wd to folder where script is stored
 scen              <- read.csv("data/scenarios.csv")
 colnames(scen)[1] <- "scenario"
 
@@ -719,8 +726,8 @@ score_table <- wdic %>%
                                    usage_score_hybrid +
                                    metadata_score_hybrid)/4) 
 
-
-
+# Create new subdirectory each time data are created
+dir.create(paste0("./data/", current_date), showWarnings = FALSE)
 
 # save
 write.csv(wdic, 
@@ -739,3 +746,11 @@ write.csv(score_table,
           here("data","indicators_scoretable.csv"))
 write.csv(indicators_metascore_short_df, 
           here("data","indicators_metascore.csv"))
+
+# Copy all files in data (except scenarios.csv and folders) to new subdirectory
+file.copy(list.files(here("data"), 
+                     full.names = T)[!grepl("scenarios.csv", 
+                                            list.files(here("data"))) &
+                                      !file.info(list.files(here("data"), 
+                                                            full.names = T))$isdir], 
+          paste0("./data/", current_date))
