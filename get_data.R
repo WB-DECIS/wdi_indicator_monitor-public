@@ -2,12 +2,16 @@ library(tidyverse)
 library(reshape2)
 library(here)
 library(lubridate)
-#devtools::install_github('randyzwitch/RSiteCatalyst')
+library(devtools)
+devtools::install_github('randyzwitch/RSiteCatalyst')
 library(RSiteCatalyst)
 #read in password.R at here()
 here::i_am("get_data.R")
 
 source(here("password.R"))
+
+# Read Adobe credentials
+getwd()
 
 #### GET DATA ####
 
